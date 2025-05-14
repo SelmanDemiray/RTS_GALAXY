@@ -1,6 +1,12 @@
 use macroquad::prelude::*;
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Debug, PartialEq, Copy)]
+pub enum GameMode {
+    Offline,
+    Online,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum NetworkMessage {
     ChatMessage(String),
@@ -17,7 +23,7 @@ pub struct Unit {
     pub unit_type: UnitType,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum UnitType {
     Worker,
     Soldier,
@@ -28,6 +34,8 @@ pub struct GameState {
     pub units: Vec<Unit>,
     pub selected_unit: Option<u32>,
     pub messages: Vec<String>,
+    pub game_mode: GameMode,
+    pub world_address: String,
 }
 
 impl GameState {
@@ -39,6 +47,8 @@ impl GameState {
             ],
             selected_unit: None,
             messages: Vec::new(),
+            game_mode: GameMode::Offline,
+            world_address: String::new(),
         }
     }
     
@@ -98,6 +108,14 @@ impl GameState {
                     break;
                 }
             }
+        }
+    }
+
+    pub fn set_game_mode(&mut self, mode: GameMode) {
+        self.game_mode = mode;
+        
+        if mode == GameMode::Offline {
+            self.messages.push("Playing in offline mode.".to_string());
         }
     }
 }

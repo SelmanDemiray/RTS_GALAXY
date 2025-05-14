@@ -1,6 +1,6 @@
 use egui_macroquad::egui;
-use crate::game::{GameState, NetworkMessage};
-use crate::network::NetworkClient;
+use crate::game::{GameState, NetworkMessage, GameMode};
+use crate::network::{NetworkClient, ConnectionStatus};
 use macroquad::input::{is_mouse_button_pressed, MouseButton};
 use macroquad::prelude::mouse_position;
 
@@ -16,15 +16,17 @@ pub fn draw_ui(game_state: &mut GameState, network_client: &mut NetworkClient) {
             let (x, y) = mouse_position();
             game_state.move_selected_unit(x, y);
             
-            // Send movement command to network - no longer async
-            if let Some(unit_id) = game_state.selected_unit {
-                let action = NetworkMessage::PlayerAction {
-                    unit_id,
-                    target_x: x,
-                    target_y: y,
-                };
-                
-                let _ = network_client.send(&action);
+            // Send movement command to network only if online
+            if game_state.game_mode == GameMode::Online && network_client.is_connected() {
+                if let Some(unit_id) = game_state.selected_unit {
+                    let action = NetworkMessage::PlayerAction {
+                        unit_id,
+                        target_x: x,
+                        target_y: y,
+                    };
+                    
+                    let _ = network_client.send(&action);
+                }
             }
         }
     }
@@ -36,16 +38,64 @@ pub fn draw_ui(game_state: &mut GameState, network_client: &mut NetworkClient) {
                 ui.heading("RTS Game");
                 ui.separator();
                 
-                let connection_status = if network_client.is_connected() {
-                    "Connected"
-                } else {
-                    "Disconnected"
-                };
+                // Game Mode Section
+                ui.heading("Game Mode");
                 
-                ui.label(format!("Network: {}", connection_status));
+                let current_mode = if game_state.game_mode == GameMode::Online { "Online" } else { "Offline" };
+                ui.label(format!("Current Mode: {}", current_mode));
                 
-                if ui.button("Connect").clicked() {
-                    let _ = network_client.connect("127.0.0.1:8080");
+                ui.horizontal(|ui| {
+                    if ui.button("Play Offline").clicked() {
+                        game_state.set_game_mode(GameMode::Offline);
+                        network_client.disconnect();
+                    }
+                    
+                    if game_state.game_mode == GameMode::Offline {
+                        if ui.button("Connect to World").clicked() {
+                            game_state.world_address = "127.0.0.1:8080".to_string();
+                            game_state.game_mode = GameMode::Online;
+                        }
+                    }
+                });
+                
+                // Connection section - only show when in online mode
+                if game_state.game_mode == GameMode::Online {
+                    ui.separator();
+                    ui.heading("Network Connection");
+                    
+                    let connection_status = match &network_client.status {
+                        ConnectionStatus::Connected => "Connected".to_string(),
+                        ConnectionStatus::Connecting => "Connecting...".to_string(),
+                        ConnectionStatus::Disconnected => "Disconnected".to_string(),
+                        ConnectionStatus::Failed(error) => format!("Failed: {}", error),
+                    };
+                    
+                    ui.label(format!("Status: {}", connection_status));
+                    
+                    ui.horizontal(|ui| {
+                        let mut address = game_state.world_address.clone();
+                        ui.label("Server:");
+                        if ui.text_edit_singleline(&mut address).changed() {
+                            game_state.world_address = address;
+                        }
+                        
+                        if !network_client.is_connected() {
+                            if ui.button("Connect").clicked() {
+                                if game_state.world_address.is_empty() {
+                                    game_state.world_address = "127.0.0.1:8080".to_string();
+                                }
+                                let _ = network_client.connect(&game_state.world_address);
+                            }
+                        } else {
+                            if ui.button("Disconnect").clicked() {
+                                network_client.disconnect();
+                            }
+                        }
+                    });
+                    
+                    if let Some(error) = &network_client.last_error {
+                        ui.colored_label(egui::Color32::RED, format!("Error: {}", error));
+                    }
                 }
                 
                 ui.separator();
@@ -72,19 +122,24 @@ pub fn draw_ui(game_state: &mut GameState, network_client: &mut NetworkClient) {
                 
                 ui.separator();
                 
-                let mut chat_input = String::new();
-                ui.horizontal(|ui| {
-                    let response = ui.text_edit_singleline(&mut chat_input);
-                    
-                    if ui.button("Send").clicked() || (response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter))) {
-                        if !chat_input.is_empty() {
-                            let message = NetworkMessage::ChatMessage(chat_input.clone());
-                            let _ = network_client.send(&message);
-                            game_state.messages.push(format!("You: {}", chat_input));
-                            chat_input.clear();
+                // Only allow chat if in online mode
+                if game_state.game_mode == GameMode::Online && network_client.is_connected() {
+                    let mut chat_input = String::new();
+                    ui.horizontal(|ui| {
+                        let response = ui.text_edit_singleline(&mut chat_input);
+                        
+                        if ui.button("Send").clicked() || (response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter))) {
+                            if !chat_input.is_empty() {
+                                let message = NetworkMessage::ChatMessage(chat_input.clone());
+                                let _ = network_client.send(&message);
+                                game_state.messages.push(format!("You: {}", chat_input));
+                                chat_input.clear();
+                            }
                         }
-                    }
-                });
+                    });
+                } else {
+                    ui.label("Chat available when connected to a world");
+                }
             });
     });
     
