@@ -2,9 +2,10 @@ use egui_macroquad::egui;
 use crate::game::{GameState, NetworkMessage, GameMode};
 use crate::network::{NetworkClient, ConnectionStatus};
 use macroquad::input::{is_mouse_button_pressed, MouseButton};
-use macroquad::prelude::mouse_position;
+use macroquad::prelude::{mouse_position, draw_text_ex, TextParams};
+use crate::resources::ResourceManager;
 
-pub fn draw_ui(game_state: &mut GameState, network_client: &mut NetworkClient) {
+pub fn draw_ui(game_state: &mut GameState, network_client: &mut NetworkClient, resource_manager: &ResourceManager) {
     // Process mouse input for game interaction
     if is_mouse_button_pressed(MouseButton::Left) {
         let (x, y) = mouse_position();
@@ -12,15 +13,15 @@ pub fn draw_ui(game_state: &mut GameState, network_client: &mut NetworkClient) {
     }
     
     if is_mouse_button_pressed(MouseButton::Right) {
-        if game_state.selected_unit.is_some() {
+        if !game_state.selected_units.is_empty() {
             let (x, y) = mouse_position();
             game_state.move_selected_unit(x, y);
             
             // Send movement command to network only if online
             if game_state.game_mode == GameMode::Online && network_client.is_connected() {
-                if let Some(unit_id) = game_state.selected_unit {
+                if let Some(unit_id) = game_state.selected_units.first() {
                     let action = NetworkMessage::PlayerAction {
-                        unit_id,
+                        unit_id: *unit_id,
                         target_x: x,
                         target_y: y,
                     };
@@ -101,7 +102,7 @@ pub fn draw_ui(game_state: &mut GameState, network_client: &mut NetworkClient) {
                 ui.separator();
                 
                 ui.heading("Selected Unit");
-                if let Some(unit_id) = game_state.selected_unit {
+                if let Some(&unit_id) = game_state.selected_units.first() {
                     if let Some(unit) = game_state.units.iter().find(|u| u.id == unit_id) {
                         ui.label(format!("Unit ID: {}", unit.id));
                         ui.label(format!("Position: ({:.1}, {:.1})", unit.x, unit.y));
@@ -142,6 +143,18 @@ pub fn draw_ui(game_state: &mut GameState, network_client: &mut NetworkClient) {
                 }
             });
     });
+    
+    // Render any additional UI elements using the resource manager
+    if let Some(font) = resource_manager.get_font("default") {
+        let params = TextParams {
+            font: *font,
+            font_size: 20,
+            ..Default::default()
+        };
+        
+        // Draw game version info in the corner
+        draw_text_ex("Fantasy RTS v0.1", 10.0, 20.0, params);
+    }
     
     egui_macroquad::draw();
 }
