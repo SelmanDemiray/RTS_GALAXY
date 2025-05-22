@@ -1,0 +1,13 @@
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ResourceType {
+    Minerals,
+    Energy,
+}
+
+pub struct ResourceNode {
+    pub x: f32,
+    pub y: f32,
+    pub resources: i32,
+    pub resource_type: ResourceType,
+    pub radius: f32,
+}

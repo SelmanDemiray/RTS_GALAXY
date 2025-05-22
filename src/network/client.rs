@@ -2,7 +2,7 @@ use std::error::Error;
 use tokio::net::TcpStream;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::runtime::Runtime;
-use crate::game::NetworkMessage;
+use crate::network::messages::NetworkMessage;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConnectionStatus {
@@ -18,6 +18,7 @@ pub struct NetworkClient {
     runtime: Runtime,
     pub status: ConnectionStatus,
     pub last_error: Option<String>,
+    is_connected: bool,
 }
 
 impl NetworkClient {
@@ -31,6 +32,7 @@ impl NetworkClient {
             runtime,
             status: ConnectionStatus::Disconnected,
             last_error: None,
+            is_connected: false,
         }
     }
     
@@ -54,11 +56,13 @@ impl NetworkClient {
             Ok(stream) => {
                 self.stream = Some(stream);
                 self.status = ConnectionStatus::Connected;
+                self.is_connected = true;
                 Ok(())
             }
             Err(error_msg) => {
                 self.status = ConnectionStatus::Failed(error_msg.clone());
                 self.last_error = Some(error_msg.clone());
+                self.is_connected = false;
                 Err(error_msg.into())
             }
         }
@@ -67,6 +71,7 @@ impl NetworkClient {
     pub fn disconnect(&mut self) {
         self.stream = None;
         self.status = ConnectionStatus::Disconnected;
+        self.is_connected = false;
     }
     
     pub fn send(&mut self, message: &NetworkMessage) -> Result<(), Box<dyn Error>> {
@@ -138,6 +143,6 @@ impl NetworkClient {
     }
     
     pub fn is_connected(&self) -> bool {
-        self.status == ConnectionStatus::Connected
+        self.is_connected
     }
 }

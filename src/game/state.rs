@@ -1,148 +1,10 @@
 use macroquad::prelude::*;
-use serde::{Deserialize, Serialize};
 use crate::resources::ResourceManager;
-
-#[derive(Clone, Debug, PartialEq, Copy)]
-pub enum GameMode {
-    Offline,
-    Online,
-}
-
-#[derive(Clone, Debug, PartialEq, Copy)]
-pub enum GameScreen {
-    MainMenu,
-    Playing,
-    Settings,
-    Credits,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum NetworkMessage {
-    ChatMessage(String),
-    GameState(Vec<Unit>),
-    PlayerAction { unit_id: u32, target_x: f32, target_y: f32 },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub enum UnitType {
-    Worker,
-    Fighter,
-    Ranger,
-    Tank,
-    Building,
-    Headquarters,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub enum BuildingType {
-    Headquarters,
-    Barracks,
-    Factory,
-    ResearchCenter,
-    TurretDefense,
-    ResourceCollector,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Unit {
-    pub id: u32,
-    pub x: f32,
-    pub y: f32,
-    pub health: i32,
-    pub max_health: i32,
-    pub unit_type: UnitType,
-    pub player_id: u8,
-    pub target_x: Option<f32>,
-    pub target_y: Option<f32>,
-    pub speed: f32,
-    pub attack_damage: i32,
-    pub attack_range: f32,
-    pub attack_cooldown: f32,
-    pub current_cooldown: f32,
-    pub building_type: Option<BuildingType>,
-    pub construction_progress: Option<f32>,
-    pub resource_capacity: Option<i32>,
-    pub current_resources: Option<i32>,
-}
-
-impl Unit {
-    pub fn new(id: u32, x: f32, y: f32, unit_type: UnitType, player_id: u8) -> Self {
-        let (health, speed, damage, range) = match unit_type {
-            UnitType::Worker => (50, 2.5, 5, 20.0),
-            UnitType::Fighter => (80, 3.0, 15, 30.0),
-            UnitType::Ranger => (60, 2.8, 20, 150.0),
-            UnitType::Tank => (150, 1.5, 30, 60.0),
-            UnitType::Building => (200, 0.0, 0, 0.0),
-            UnitType::Headquarters => (500, 0.0, 0, 0.0),
-        };
-
-        let resource_capacity = if unit_type == UnitType::Worker {
-            Some(50)
-        } else {
-            None
-        };
-
-        let building_type = if unit_type == UnitType::Building || unit_type == UnitType::Headquarters {
-            Some(BuildingType::Headquarters) 
-        } else {
-            None
-        };
-
-        Self {
-            id,
-            x,
-            y,
-            health,
-            max_health: health,
-            unit_type,
-            player_id,
-            target_x: None,
-            target_y: None,
-            speed,
-            attack_damage: damage,
-            attack_range: range,
-            attack_cooldown: 1.0,
-            current_cooldown: 0.0,
-            building_type,
-            construction_progress: None,
-            resource_capacity,
-            current_resources: if resource_capacity.is_some() { Some(0) } else { None },
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn is_completed_building(&self) -> bool {
-        if let (Some(_building_type), Some(progress)) = (&self.building_type, self.construction_progress) {
-            progress >= 100.0
-        } else {
-            false
-        }
-    }
-}
-
-pub struct ResourceNode {
-    pub x: f32,
-    pub y: f32,
-    pub resources: i32,
-    pub resource_type: ResourceType,
-    pub radius: f32,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum ResourceType {
-    Minerals,
-    Energy,
-}
-
-pub struct Player {
-    #[allow(dead_code)]
-    pub id: u8,
-    pub minerals: i32,
-    pub energy: i32,
-    pub color: Color,
-    #[allow(dead_code)]
-    pub is_ai: bool,
-}
+use crate::entity::{Unit, Player, UnitType};
+use crate::game::modes::{GameMode, GameScreen};
+use crate::game::types::{ResourceType, Command};
+use crate::game::resources::ResourceNode;
+use crate::network::NetworkMessage;
 
 pub struct GameState {
     pub units: Vec<Unit>,
@@ -165,16 +27,6 @@ pub struct GameState {
     pub current_command: Option<Command>,
     pub selection_start: Option<(f32, f32)>,
     pub selection_end: Option<(f32, f32)>,
-}
-
-#[allow(dead_code)]
-#[derive(Clone, Debug, PartialEq)]
-pub enum Command {
-    Build(BuildingType),
-    Train(UnitType),
-    Attack,
-    Move,
-    Gather,
 }
 
 impl GameState {
@@ -565,8 +417,6 @@ impl GameState {
                         let damage = self.units[unit_idx].attack_damage;
                         self.units[enemy_idx].health -= damage;
                         self.units[unit_idx].current_cooldown = self.units[unit_idx].attack_cooldown;
-                        
-                        // No need to handle enemy death here as we'll clean up in a separate pass below
                     }
                 }
             }
@@ -669,130 +519,7 @@ impl GameState {
                         }
                     }
                 },
-                UnitType::Fighter => {
-                    draw_circle_lines(
-                        unit.x - self.camera_x, 
-                        unit.y - self.camera_y, 
-                        12.0, 
-                        border_size, 
-                        GREEN
-                    );
-                    draw_rectangle(
-                        unit.x - self.camera_x - 8.0, 
-                        unit.y - self.camera_y - 8.0, 
-                        16.0, 
-                        16.0, 
-                        base_color
-                    );
-                },
-                UnitType::Ranger => {
-                    draw_circle_lines(
-                        unit.x - self.camera_x, 
-                        unit.y - self.camera_y, 
-                        12.0, 
-                        border_size, 
-                        GREEN
-                    );
-                    draw_triangle(
-                        Vec2::new(unit.x - self.camera_x, unit.y - self.camera_y - 10.0),
-                        Vec2::new(unit.x - self.camera_x - 8.0, unit.y - self.camera_y + 5.0),
-                        Vec2::new(unit.x - self.camera_x + 8.0, unit.y - self.camera_y + 5.0),
-                        base_color
-                    );
-                },
-                UnitType::Tank => {
-                    draw_circle_lines(
-                        unit.x - self.camera_x, 
-                        unit.y - self.camera_y, 
-                        15.0, 
-                        border_size, 
-                        GREEN
-                    );
-                    draw_rectangle(
-                        unit.x - self.camera_x - 12.0, 
-                        unit.y - self.camera_y - 8.0, 
-                        24.0, 
-                        16.0, 
-                        base_color
-                    );
-                    
-                    // Draw tank turret
-                    draw_circle(
-                        unit.x - self.camera_x, 
-                        unit.y - self.camera_y, 
-                        6.0, 
-                        Color::new(
-                            base_color.r * 0.8,
-                            base_color.g * 0.8,
-                            base_color.b * 0.8,
-                            1.0
-                        )
-                    );
-                },
-                UnitType::Building => {
-                    let building_size = 30.0;
-                    
-                    draw_rectangle_lines(
-                        unit.x - self.camera_x - building_size,
-                        unit.y - self.camera_y - building_size, 
-                        building_size * 2.0, 
-                        building_size * 2.0, 
-                        border_size,
-                        GREEN
-                    );
-                    
-                    draw_rectangle(
-                        unit.x - self.camera_x - building_size, 
-                        unit.y - self.camera_y - building_size, 
-                        building_size * 2.0, 
-                        building_size * 2.0, 
-                        base_color
-                    );
-                    
-                    // Draw construction progress if applicable
-                    if let Some(progress) = unit.construction_progress {
-                        if progress < 100.0 {
-                            draw_rectangle(
-                                unit.x - self.camera_x - building_size,
-                                unit.y - self.camera_y - building_size - 10.0,
-                                (building_size * 2.0) * (progress / 100.0),
-                                5.0,
-                                GREEN
-                            );
-                        }
-                    }
-                },
-                UnitType::Headquarters => {
-                    let hq_size = 40.0;
-                    
-                    draw_rectangle_lines(
-                        unit.x - self.camera_x - hq_size,
-                        unit.y - self.camera_y - hq_size, 
-                        hq_size * 2.0, 
-                        hq_size * 2.0, 
-                        border_size,
-                        GREEN
-                    );
-                    
-                    draw_rectangle(
-                        unit.x - self.camera_x - hq_size, 
-                        unit.y - self.camera_y - hq_size, 
-                        hq_size * 2.0, 
-                        hq_size * 2.0, 
-                        base_color
-                    );
-                    
-                    // Draw an 'H' in the center
-                    let h_text = "HQ";
-                    let h_text_size = measure_text(h_text, None, 24, 1.0);
-                    draw_text(
-                        h_text,
-                        unit.x - self.camera_x - h_text_size.width / 2.0,
-                        unit.y - self.camera_y + h_text_size.height / 2.0,
-                        24.0,
-                        WHITE
-                    );
-                },
+                _ => {}
             }
             
             // Draw health bar
@@ -830,159 +557,6 @@ impl GameState {
             
             draw_rectangle_lines(x, y, width, height, 1.0, GREEN);
         }
-        
-        // Draw minimap
-        draw_rectangle(
-            self.minimap_rect.x,
-            self.minimap_rect.y,
-            self.minimap_rect.w,
-            self.minimap_rect.h,
-            Color::new(0.0, 0.0, 0.0, 0.7)
-        );
-        
-        draw_rectangle_lines(
-            self.minimap_rect.x,
-            self.minimap_rect.y,
-            self.minimap_rect.w,
-            self.minimap_rect.h,
-            1.0,
-            Color::new(0.8, 0.8, 0.8, 0.5)
-        );
-        
-        // Draw units on minimap
-        let map_ratio_x = self.minimap_rect.w / self.map_width;
-        let map_ratio_y = self.minimap_rect.h / self.map_height;
-        
-        for unit in &self.units {
-            let minimap_x = self.minimap_rect.x + unit.x * map_ratio_x;
-            let minimap_y = self.minimap_rect.y + unit.y * map_ratio_y;
-            let minimap_size = 2.0;
-            
-            draw_rectangle(
-                minimap_x - minimap_size / 2.0,
-                minimap_y - minimap_size / 2.0,
-                minimap_size,
-                minimap_size, // Add missing height parameter
-                self.players[unit.player_id as usize].color
-            );
-        }
-        
-        // Draw camera viewport on minimap
-        let viewport_x = self.minimap_rect.x + self.camera_x * map_ratio_x;
-        let viewport_y = self.minimap_rect.y + self.camera_y * map_ratio_y;
-        let viewport_w = screen_width() * map_ratio_x;
-        let viewport_h = screen_height() * map_ratio_y;
-        
-        draw_rectangle_lines(
-            viewport_x,
-            viewport_y,
-            viewport_w,
-            viewport_h,
-            1.0,
-            WHITE
-        );
-        
-        // Draw resources display
-        let player = &self.players[self.current_player_id as usize];
-        draw_text(
-            &format!("Minerals: {}", player.minerals),
-            10.0,
-            30.0,
-            20.0,
-            WHITE
-        );
-        
-        draw_text(
-            &format!("Energy: {}", player.energy),
-            10.0,
-            55.0,
-            20.0,
-            Color::new(1.0, 1.0, 0.0, 1.0)
-        );
-        
-        // Draw selected unit commands
-        if !self.selected_units.is_empty() {
-            let mut y_pos = 100.0;
-            
-            // Show different commands based on selected unit types
-            let mut has_workers = false;
-            let mut has_buildings = false;
-            let mut has_combat_units = false;
-            
-            for &unit_id in &self.selected_units {
-                if let Some(unit) = self.units.iter().find(|u| u.id == unit_id) {
-                    match unit.unit_type {
-                        UnitType::Worker => has_workers = true,
-                        UnitType::Building | UnitType::Headquarters => has_buildings = true,
-                        _ => has_combat_units = true,
-                    }
-                }
-            }
-            
-            // Display command info based on current selection
-            if has_workers || has_combat_units || has_buildings {
-                draw_text(
-                    "Commands:",
-                    10.0,
-                    y_pos,
-                    18.0,
-                    WHITE
-                );
-                y_pos += 25.0;
-                
-                if has_workers {
-                    draw_text(
-                        "G - Gather resources",
-                        15.0,
-                        y_pos,
-                        16.0,
-                        WHITE
-                    );
-                    y_pos += 20.0;
-                    
-                    draw_text(
-                        "B - Build structure",
-                        15.0,
-                        y_pos,
-                        16.0,
-                        WHITE
-                    );
-                    y_pos += 20.0;
-                }
-                
-                if has_combat_units || has_workers {
-                    draw_text(
-                        "A - Attack",
-                        15.0,
-                        y_pos,
-                        16.0,
-                        WHITE
-                    );
-                    y_pos += 20.0;
-                    
-                    draw_text(
-                        "M - Move",
-                        15.0,
-                        y_pos,
-                        16.0,
-                        WHITE
-                    );
-                    if has_buildings && y_pos > 0.0 {
-                        y_pos += 20.0;
-                    }
-                }
-                
-                if has_buildings {
-                    draw_text(
-                        "T - Train units",
-                        15.0,
-                        y_pos,
-                        16.0,
-                        WHITE
-                    );
-                }
-            }
-        }
     }
     
     pub fn handle_network_message(&mut self, msg: NetworkMessage) {
@@ -1000,12 +574,10 @@ impl GameState {
     }
     
     pub fn select_unit_at(&mut self, x: f32, y: f32) {
-        // Clear previous selection if not holding shift
         if !is_key_down(KeyCode::LeftShift) {
             self.selected_units.clear();
         }
         
-        // Find unit at position
         for unit in &self.units {
             if unit.player_id == self.current_player_id {
                 let distance = ((unit.x - x).powi(2) + (unit.y - y).powi(2)).sqrt();
@@ -1064,7 +636,7 @@ impl GameState {
             UnitType::Ranger => player.minerals >= 80 && player.energy >= 40,
             UnitType::Tank => player.minerals >= 200 && player.energy >= 50,
             UnitType::Building => player.minerals >= 150,
-            UnitType::Headquarters => false, // Can't build headquarters
+            UnitType::Headquarters => false,
         }
     }
 
@@ -1086,7 +658,7 @@ impl GameState {
                 player.energy -= 50;
             },
             UnitType::Building => player.minerals -= 150,
-            UnitType::Headquarters => {}, // Free (can't be built)
+            UnitType::Headquarters => {},
         }
     }
 }

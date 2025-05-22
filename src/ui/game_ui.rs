@@ -1,9 +1,10 @@
 use egui_macroquad::egui;
-use crate::game::{GameState, NetworkMessage, GameMode};
+use crate::game::{GameState, GameMode};
 use crate::network::{NetworkClient, ConnectionStatus};
 use macroquad::input::{is_mouse_button_pressed, MouseButton};
 use macroquad::prelude::{mouse_position, draw_text_ex, TextParams};
 use crate::resources::ResourceManager;
+use crate::network::NetworkMessage;
 
 pub fn draw_ui(game_state: &mut GameState, network_client: &mut NetworkClient, resource_manager: &ResourceManager) {
     // Process mouse input for game interaction
