@@ -83,6 +83,42 @@ pub fn draw(menu: &MenuSystem, game_state: &mut GameState) {
     // Sound volume slider
     draw_text("Sound Volume:", screen_center_x - 200.0, y_start + option_spacing, 24.0, WHITE);
     
+    // Draw mute toggle button for sound
+    let mute_btn_size = 30.0;
+    let mute_btn_x = screen_center_x + 180.0;
+    let mute_btn_y = y_start + option_spacing + 15.0;
+    let mute_btn_rect = Rect::new(mute_btn_x, mute_btn_y, mute_btn_size, mute_btn_size);
+    
+    // Change button color based on mute state
+    let mute_btn_color = if game_state.sound_muted {
+        Color::new(0.8, 0.2, 0.2, 1.0) // Red when muted
+    } else {
+        Color::new(0.2, 0.7, 0.2, 1.0) // Green when unmuted
+    };
+    
+    let is_mute_btn_hovered = mute_btn_rect.contains(Vec2::new(mouse_pos.0, mouse_pos.1));
+    
+    // Draw the mute button with hover effect
+    draw_rectangle(mute_btn_rect.x, mute_btn_rect.y, mute_btn_rect.w, mute_btn_rect.h, mute_btn_color);
+    draw_rectangle_lines(mute_btn_rect.x, mute_btn_rect.y, mute_btn_rect.w, mute_btn_rect.h, 
+                         if is_mute_btn_hovered { 2.0 } else { 1.0 }, WHITE);
+    
+    // Draw mute/unmute icon
+    let icon_text = if game_state.sound_muted { "M" } else { "S" };
+    let icon_size = measure_text(icon_text, None, 18, 1.0);
+    draw_text(
+        icon_text,
+        mute_btn_rect.x + (mute_btn_rect.w - icon_size.width) / 2.0,
+        mute_btn_rect.y + (mute_btn_rect.h + icon_size.height) / 2.0,
+        18.0,
+        WHITE
+    );
+    
+    // Handle mute button click
+    if is_mute_btn_hovered && is_mouse_button_pressed(MouseButton::Left) {
+        game_state.sound_muted = !game_state.sound_muted;
+    }
+    
     // Draw slider track
     let slider_width = 300.0;
     let slider_height = 10.0;
@@ -92,7 +128,8 @@ pub fn draw(menu: &MenuSystem, game_state: &mut GameState) {
     draw_rectangle(slider_x, slider_y, slider_width, slider_height, DARKGRAY);
     
     // Draw slider fill - now uses actual sound volume from game state
-    draw_rectangle(slider_x, slider_y, slider_width * game_state.sound_volume, slider_height, GREEN);
+    draw_rectangle(slider_x, slider_y, slider_width * game_state.sound_volume, slider_height, 
+                  if game_state.sound_muted { GRAY } else { GREEN });
     
     // Draw slider handle
     let handle_radius = 15.0;
@@ -124,13 +161,48 @@ pub fn draw(menu: &MenuSystem, game_state: &mut GameState) {
     // Music volume slider
     draw_text("Music Volume:", screen_center_x - 200.0, y_start + option_spacing * 2.0, 24.0, WHITE);
     
+    // Draw mute toggle button for music
+    let music_mute_btn_y = y_start + option_spacing * 2.0 + 15.0;
+    let music_mute_btn_rect = Rect::new(mute_btn_x, music_mute_btn_y, mute_btn_size, mute_btn_size);
+    
+    // Change button color based on mute state
+    let music_mute_btn_color = if game_state.music_muted {
+        Color::new(0.8, 0.2, 0.2, 1.0) // Red when muted
+    } else {
+        Color::new(0.2, 0.2, 0.8, 1.0) // Blue when unmuted
+    };
+    
+    let is_music_mute_btn_hovered = music_mute_btn_rect.contains(Vec2::new(mouse_pos.0, mouse_pos.1));
+    
+    // Draw the mute button with hover effect
+    draw_rectangle(music_mute_btn_rect.x, music_mute_btn_rect.y, music_mute_btn_rect.w, music_mute_btn_rect.h, music_mute_btn_color);
+    draw_rectangle_lines(music_mute_btn_rect.x, music_mute_btn_rect.y, music_mute_btn_rect.w, music_mute_btn_rect.h, 
+                        if is_music_mute_btn_hovered { 2.0 } else { 1.0 }, WHITE);
+    
+    // Draw mute/unmute icon
+    let music_icon_text = if game_state.music_muted { "M" } else { "♪" };
+    let music_icon_size = measure_text(music_icon_text, None, 18, 1.0);
+    draw_text(
+        music_icon_text,
+        music_mute_btn_rect.x + (music_mute_btn_rect.w - music_icon_size.width) / 2.0,
+        music_mute_btn_rect.y + (music_mute_btn_rect.h + music_icon_size.height) / 2.0,
+        18.0,
+        WHITE
+    );
+    
+    // Handle music mute button click
+    if is_music_mute_btn_hovered && is_mouse_button_pressed(MouseButton::Left) {
+        game_state.music_muted = !game_state.music_muted;
+    }
+    
     // Draw slider track
     let music_slider_y = y_start + option_spacing * 2.0 + 30.0;
     
     draw_rectangle(slider_x, music_slider_y, slider_width, slider_height, DARKGRAY);
     
     // Draw slider fill - now uses actual music volume from game state
-    draw_rectangle(slider_x, music_slider_y, slider_width * game_state.music_volume, slider_height, BLUE);
+    draw_rectangle(slider_x, music_slider_y, slider_width * game_state.music_volume, slider_height, 
+                  if game_state.music_muted { GRAY } else { BLUE });
     
     // Draw slider handle
     let music_handle_x = slider_x + slider_width * game_state.music_volume;

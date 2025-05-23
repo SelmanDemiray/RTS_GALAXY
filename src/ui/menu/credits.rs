@@ -35,6 +35,7 @@ pub fn draw(_menu: &MenuSystem, _game_state: &mut GameState) {
     draw_text("Special Thanks", screen_center_x - 80.0, y_start + line_spacing*6.0, 20.0, GOLD);
     draw_text("All the open source projects that made this possible", screen_center_x - 240.0, y_start + line_spacing*7.0, 18.0, WHITE);
     draw_text("macroquad, egui, and Rust community", screen_center_x - 190.0, y_start + line_spacing*8.0, 18.0, WHITE);
+    draw_text("Asset creators and open source art contributors", screen_center_x - 220.0, y_start + line_spacing*9.0, 18.0, WHITE);
     
     draw_text(
         "Press ESC to return to menu",

@@ -7,8 +7,10 @@ use crate::network::messages::NetworkMessage;
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConnectionStatus {
     Disconnected,
+    #[allow(dead_code)]
     Connecting,
     Connected,
+    #[allow(dead_code)]
     Failed(String),
 }
 
@@ -36,6 +38,7 @@ impl NetworkClient {
         }
     }
     
+    #[allow(dead_code)]
     pub fn connect(&mut self, addr: &str) -> Result<(), Box<dyn Error>> {
         // Reset connection state
         self.stream = None;
@@ -74,6 +77,7 @@ impl NetworkClient {
         self.is_connected = false;
     }
     
+    #[allow(dead_code)]
     pub fn send(&mut self, message: &NetworkMessage) -> Result<(), Box<dyn Error>> {
         if self.status != ConnectionStatus::Connected {
             return Ok(());  // Silently fail if not connected

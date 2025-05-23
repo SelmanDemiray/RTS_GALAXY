@@ -1,6 +1,6 @@
-mod state;
+pub mod state;
 mod modes;
-mod types;
+pub mod types;
 mod resources;
 
 pub use state::GameState;

@@ -12,6 +12,7 @@ pub struct GameState {
     pub messages: Vec<String>,
     pub game_mode: GameMode,
     pub current_screen: GameScreen,
+    #[allow(dead_code)]
     pub world_address: String,
     pub camera_x: f32,
     pub camera_y: f32,
@@ -31,6 +32,8 @@ pub struct GameState {
     pub sound_volume: f32,
     pub music_volume: f32,
     pub game_difficulty: usize, // 0 = Easy, 1 = Normal, 2 = Hard
+    pub sound_muted: bool,
+    pub music_muted: bool,
 }
 
 impl GameState {
@@ -120,6 +123,8 @@ impl GameState {
             sound_volume: 0.6,
             music_volume: 0.4,
             game_difficulty: 1, // Normal by default
+            sound_muted: false,
+            music_muted: false,
         }
     }
     
@@ -612,6 +617,7 @@ impl GameState {
         }
     }
     
+    #[allow(dead_code)]
     pub fn move_selected_unit(&mut self, x: f32, y: f32) {
         if self.selected_units.is_empty() {
             return;
@@ -683,5 +689,25 @@ impl GameState {
         // Update minimap position when screen size changes
         self.minimap_rect.x = screen_width() - 210.0;
         self.minimap_rect.y = screen_height() - 210.0;
+    }
+
+    // Add a method to get the effective sound volume (considering mute state)
+    #[allow(dead_code)]
+    pub fn get_effective_sound_volume(&self) -> f32 {
+        if self.sound_muted {
+            0.0
+        } else {
+            self.sound_volume
+        }
+    }
+    
+    // Add a method to get the effective music volume (considering mute state)
+    #[allow(dead_code)]
+    pub fn get_effective_music_volume(&self) -> f32 {
+        if self.music_muted {
+            0.0
+        } else {
+            self.music_volume
+        }
     }
 }
