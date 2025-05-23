@@ -27,7 +27,22 @@ async fn main() {
     // Start at main menu
     game_state.current_screen = GameScreen::MainMenu;
     
+    // Track previous screen dimensions to detect resizes
+    let mut prev_width = screen_width();
+    let mut prev_height = screen_height();
+    
     loop {
+        // Check for screen resize
+        let current_width = screen_width();
+        let current_height = screen_height();
+        
+        if prev_width != current_width || prev_height != current_height {
+            // Screen has been resized
+            game_state.handle_screen_resize();
+            prev_width = current_width;
+            prev_height = current_height;
+        }
+        
         clear_background(Color::new(0.1, 0.1, 0.2, 1.0));
         
         match game_state.current_screen {

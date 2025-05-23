@@ -51,13 +51,13 @@ pub fn draw_game(game_state: &GameState, _resource_manager: &ResourceManager) {
         // Draw resource amount
         let text_size = 12.0;
         let text = node.resources.to_string();
-        let text_size = measure_text(&text, None, text_size as u16, 1.0);
+        let text_size_measured = measure_text(&text, None, text_size as u16, 1.0);
         
         draw_text(
             &text,
-            node.x - game_state.camera_x - text_size.width / 2.0,
-            node.y - game_state.camera_y + text_size.height / 2.0,
-            text_size.height,
+            node.x - game_state.camera_x - text_size_measured.width / 2.0,
+            node.y - game_state.camera_y + text_size_measured.height / 2.0,
+            text_size,
             WHITE
         );
     }

@@ -27,6 +27,10 @@ pub struct GameState {
     pub current_command: Option<Command>,
     pub selection_start: Option<(f32, f32)>,
     pub selection_end: Option<(f32, f32)>,
+    // Add new game settings fields
+    pub sound_volume: f32,
+    pub music_volume: f32,
+    pub game_difficulty: usize, // 0 = Easy, 1 = Normal, 2 = Hard
 }
 
 impl GameState {
@@ -84,6 +88,14 @@ impl GameState {
             });
         }
 
+        // Create minimap rect - position it relative to screen size
+        let minimap_rect = Rect::new(
+            screen_width() - 210.0, 
+            screen_height() - 210.0, 
+            200.0, 
+            200.0
+        );
+
         Self {
             units,
             selected_units: Vec::new(),
@@ -100,10 +112,14 @@ impl GameState {
             resource_nodes,
             next_unit_id: 7,
             game_time: 0.0,
-            minimap_rect: Rect::new(screen_width() - 210.0, screen_height() - 210.0, 200.0, 200.0),
+            minimap_rect,
             current_command: None,
             selection_start: None,
             selection_end: None,
+            // Initialize new settings fields
+            sound_volume: 0.6,
+            music_volume: 0.4,
+            game_difficulty: 1, // Normal by default
         }
     }
     
@@ -660,5 +676,12 @@ impl GameState {
             UnitType::Building => player.minerals -= 150,
             UnitType::Headquarters => {},
         }
+    }
+
+    // Add a new method to handle screen resizes
+    pub fn handle_screen_resize(&mut self) {
+        // Update minimap position when screen size changes
+        self.minimap_rect.x = screen_width() - 210.0;
+        self.minimap_rect.y = screen_height() - 210.0;
     }
 }
