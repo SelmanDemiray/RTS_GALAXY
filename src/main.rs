@@ -13,6 +13,7 @@ use crate::ui::menu::MenuSystem;
 use crate::resources::ResourceManager;
 use crate::network::NetworkClient;
 use crate::audio::AudioManager;
+use std::panic::{self, AssertUnwindSafe}; // Add this import for AssertUnwindSafe
 
 #[macroquad::main("Fantasy RTS")]
 async fn main() {
@@ -68,61 +69,76 @@ async fn main() {
     audio_manager.play_music("main_theme", &resource_manager, &game_state);
     
     loop {
-        // Check for screen resize
-        let current_width = screen_width();
-        let current_height = screen_height();
-        
-        if prev_width != current_width || prev_height != current_height {
-            // Screen has been resized
-            game_state.handle_screen_resize();
-            prev_width = current_width;
-            prev_height = current_height;
-        }
-        
-        // Update audio volumes if they've changed
-        audio_manager.update_volumes(&resource_manager, &game_state);
-        
-        clear_background(Color::new(0.1, 0.1, 0.2, 1.0));
-        
-        match game_state.current_screen {
-            GameScreen::MainMenu | GameScreen::Settings | GameScreen::Credits => {
-                menu_system.update(&mut game_state, &resource_manager, &mut audio_manager);
-                menu_system.draw(&mut game_state, &resource_manager);
-            },
-            GameScreen::Playing => {
-                // Play game music if different from menu music
-                if game_state.current_screen == GameScreen::Playing && 
-                   audio_manager.get_current_music() != Some("gameplay") {
-                    audio_manager.play_music("gameplay", &resource_manager, &game_state);
-                }
+        // Wrap the frame processing in a catch_unwind to prevent crashes
+        let result = panic::catch_unwind(AssertUnwindSafe(|| {
+            // Check for screen resize
+            let current_width = screen_width();
+            let current_height = screen_height();
+            
+            if prev_width != current_width || prev_height != current_height {
+                // Screen has been resized
+                game_state.handle_screen_resize();
+                prev_width = current_width;
+                prev_height = current_height;
                 
-                // Game update logic
-                let previous_selected = game_state.selected_units.clone();
-                game_state.update();
-                
-                // Play selection sound if selection changed
-                if previous_selected != game_state.selected_units && !game_state.selected_units.is_empty() {
-                    audio_manager.play_selection_sound(&resource_manager, &game_state);
-                }
-                
-                // Process AI in offline mode
-                if game_state.game_mode == GameMode::Offline {
-                    ai_controller.update(&mut game_state);
-                }
-                
-                // Handle networking only if in online mode
-                if game_state.game_mode == GameMode::Online && network_client.is_connected() {
-                    if let Some(msg) = network_client.receive() {
-                        game_state.handle_network_message(msg);
+                // Log the resize event
+                println!("Screen resized to: {}x{}", current_width, current_height);
+            }
+            
+            // Update audio volumes if they've changed
+            audio_manager.update_volumes(&resource_manager, &game_state);
+            
+            clear_background(Color::new(0.1, 0.1, 0.2, 1.0));
+            
+            match game_state.current_screen {
+                GameScreen::MainMenu | GameScreen::Settings | GameScreen::Credits => {
+                    menu_system.update(&mut game_state, &resource_manager, &mut audio_manager);
+                    menu_system.draw(&mut game_state, &resource_manager);
+                },
+                GameScreen::Playing => {
+                    // Play game music if different from menu music
+                    if game_state.current_screen == GameScreen::Playing && 
+                       audio_manager.get_current_music() != Some("gameplay") {
+                        audio_manager.play_music("gameplay", &resource_manager, &game_state);
                     }
-                }
-                
-                // Draw game elements
-                game_state.draw(&resource_manager);
-                
-                // Draw UI
-                ui::game_ui::draw_ui(&mut game_state, &mut network_client, &resource_manager, &mut audio_manager);
-            },
+                    
+                    // Game update logic
+                    let previous_selected = game_state.selected_units.clone();
+                    game_state.update();
+                    
+                    // Play selection sound if selection changed
+                    if previous_selected != game_state.selected_units && !game_state.selected_units.is_empty() {
+                        audio_manager.play_selection_sound(&resource_manager, &game_state);
+                    }
+                    
+                    // Process AI in offline mode
+                    if game_state.game_mode == GameMode::Offline {
+                        ai_controller.update(&mut game_state);
+                    }
+                    
+                    // Handle networking only if in online mode
+                    if game_state.game_mode == GameMode::Online && network_client.is_connected() {
+                        if let Some(msg) = network_client.receive() {
+                            game_state.handle_network_message(msg);
+                        }
+                    }
+                    
+                    // Draw game elements
+                    game_state.draw(&resource_manager);
+                    
+                    // Draw UI
+                    ui::game_ui::draw_ui(&mut game_state, &mut network_client, &resource_manager, &mut audio_manager);
+                },
+            }
+        }));
+        
+        // If there was a panic during frame processing, log it but don't crash
+        if let Err(e) = result {
+            if let Some(err_msg) = e.downcast_ref::<String>() {
+                eprintln!("Recovered from error: {}", err_msg);
+            } else {
+                eprintln!("Recovered from unknown error");
+            }
         }
         
         next_frame().await;

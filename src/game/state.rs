@@ -146,9 +146,8 @@ impl GameState {
             self.camera_x += 5.0;
         }
         
-        // Clamp camera position
-        self.camera_x = self.camera_x.clamp(0.0, self.map_width - screen_width());
-        self.camera_y = self.camera_y.clamp(0.0, self.map_height - screen_height());
+        // Safely clamp camera position
+        self.ensure_camera_in_bounds();
         
         // Process unit movement and actions
         self.update_units();
@@ -168,9 +167,8 @@ impl GameState {
                 self.camera_x = world_x - screen_width() / 2.0;
                 self.camera_y = world_y - screen_height() / 2.0;
                 
-                // Clamp camera position
-                self.camera_x = self.camera_x.clamp(0.0, self.map_width - screen_width());
-                self.camera_y = self.camera_y.clamp(0.0, self.map_height - screen_height());
+                // Safely clamp camera position
+                self.ensure_camera_in_bounds();
             } else {
                 self.selection_start = Some((mouse_x + self.camera_x, mouse_y + self.camera_y));
                 self.selection_end = Some((mouse_x + self.camera_x, mouse_y + self.camera_y));
@@ -689,6 +687,20 @@ impl GameState {
         // Update minimap position when screen size changes
         self.minimap_rect.x = screen_width() - 210.0;
         self.minimap_rect.y = screen_height() - 210.0;
+        
+        // Ensure camera stays within valid bounds after resize
+        self.ensure_camera_in_bounds();
+    }
+    
+    // New helper method to safely ensure camera stays within map bounds
+    pub fn ensure_camera_in_bounds(&mut self) {
+        // Calculate maximum camera positions, ensuring they never go negative
+        let max_camera_x = (self.map_width - screen_width()).max(0.0);
+        let max_camera_y = (self.map_height - screen_height()).max(0.0);
+        
+        // Clamp camera position
+        self.camera_x = self.camera_x.clamp(0.0, max_camera_x);
+        self.camera_y = self.camera_y.clamp(0.0, max_camera_y);
     }
 
     // Add a method to get the effective sound volume (considering mute state)
