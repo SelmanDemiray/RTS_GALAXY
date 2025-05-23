@@ -87,8 +87,7 @@ impl MenuSystem {
             let mouse_pos = mouse_position();
             if mouse_pos.1 >= start_y + 30.0 && mouse_pos.1 <= start_y + 50.0 &&
                mouse_pos.0 >= center_x && mouse_pos.0 <= center_x + button_width {
-                let new_vol = (mouse_pos.0 - center_x) / button_width;
-                game_state.sound_volume = new_vol.clamp(0.0, 1.0);
+                game_state.sound_volume = ((mouse_pos.0 - center_x) / button_width).clamp(0.0, 1.0);
             }
         }
         
@@ -107,8 +106,7 @@ impl MenuSystem {
             let mouse_pos = mouse_position();
             if mouse_pos.1 >= start_y + spacing + 30.0 && mouse_pos.1 <= start_y + spacing + 50.0 &&
                mouse_pos.0 >= center_x && mouse_pos.0 <= center_x + button_width {
-                let new_vol = (mouse_pos.0 - center_x) / button_width;
-                game_state.music_volume = new_vol.clamp(0.0, 1.0);
+                game_state.music_volume = ((mouse_pos.0 - center_x) / button_width).clamp(0.0, 1.0);
             }
         }
         
@@ -127,22 +125,31 @@ impl MenuSystem {
         }
         
         // Game difficulty selection
+        let difficulty_y = start_y + spacing * 4.0;
+        draw_text("Game Difficulty:", center_x, difficulty_y, 20.0, WHITE);
+        
         let difficulties = ["Easy", "Normal", "Hard"];
-        draw_text("Game Difficulty:", center_x, start_y + spacing * 4.0, 20.0, WHITE);
+        let difficulty_button_width = 120.0;
+        let difficulty_button_height = 40.0;
+        let difficulty_button_spacing = 10.0;
+        let total_width = difficulties.len() as f32 * difficulty_button_width + (difficulties.len() - 1) as f32 * difficulty_button_spacing;
+        let difficulty_start_x = (screen_width() - total_width) / 2.0;
         
         for (i, difficulty) in difficulties.iter().enumerate() {
-            let btn_x = center_x + (i as f32 * (button_width + 20.0)) - ((difficulties.len() - 1) as f32 * (button_width + 20.0)) / 2.0;
-            let is_selected = i == game_state.game_difficulty;
-            let btn_color = if is_selected { GREEN } else { SKYBLUE };
+            let button_x = difficulty_start_x + i as f32 * (difficulty_button_width + difficulty_button_spacing);
+            let button_y = difficulty_y + 30.0;
             
-            if self.button_colored(btn_x, start_y + spacing * 4.0 + 30.0, button_width / difficulties.len() as f32, button_height, difficulty, btn_color) {
+            let is_selected = game_state.game_difficulty == i;
+            let button_color = if is_selected { GREEN } else { SKYBLUE };
+            
+            if self.button_colored(button_x, button_y, difficulty_button_width, difficulty_button_height, difficulty, button_color) {
                 audio_manager.play_ui_click(resource_manager, game_state);
                 game_state.game_difficulty = i;
             }
         }
         
-        // Back button
-        if self.button(center_x, start_y + spacing * 5.0, button_width, button_height, "Back") {
+        // Back button - moved further down to avoid overlap
+        if self.button(center_x, start_y + spacing * 5.5, button_width, button_height, "Back") {
             audio_manager.play_ui_click(resource_manager, game_state);
             game_state.current_screen = GameScreen::MainMenu;
         }

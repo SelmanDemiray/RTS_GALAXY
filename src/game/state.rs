@@ -134,16 +134,16 @@ impl GameState {
         
         // Handle camera movement
         if is_key_down(KeyCode::W) || is_key_down(KeyCode::Up) {
-            self.camera_y -= 5.0;
+            self.camera_y -= 8.0;
         }
         if is_key_down(KeyCode::S) || is_key_down(KeyCode::Down) {
-            self.camera_y += 5.0;
+            self.camera_y += 8.0;
         }
         if is_key_down(KeyCode::A) || is_key_down(KeyCode::Left) {
-            self.camera_x -= 5.0;
+            self.camera_x -= 8.0;
         }
         if is_key_down(KeyCode::D) || is_key_down(KeyCode::Right) {
-            self.camera_x += 5.0;
+            self.camera_x += 8.0;
         }
         
         // Safely clamp camera position

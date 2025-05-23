@@ -26,6 +26,8 @@ async fn main() {
     
     // Load game resources
     resource_manager.load_resources().await;
+    // resource_manager.load_texture("assets/terrain.png").await;
+    // resource_manager.load_texture("assets/units.png").await;
     menu_system.initialize(&resource_manager);
     
     // Start at main menu
@@ -128,6 +130,15 @@ async fn main() {
                     
                     // Draw UI
                     ui::game_ui::draw_ui(&mut game_state, &mut network_client, &resource_manager, &mut audio_manager);
+                    
+                    // Show tutorial tip
+                    draw_text(
+                        "Press WASD or arrows to move, and gather resources to progress!",
+                        10.0,
+                        90.0,
+                        20.0,
+                        WHITE
+                    );
                 },
             }
         }));
