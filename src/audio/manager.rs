@@ -1,6 +1,6 @@
 use macroquad::audio::{play_sound, PlaySoundParams};
-use crate::resources::ResourceManager;
-use crate::game::GameState;
+use crate::resources::manager::ResourceManager;
+use crate::game::state::GameState;
 
 pub struct AudioManager {
     current_music: Option<String>,
@@ -12,8 +12,8 @@ impl AudioManager {
     pub fn new() -> Self {
         Self {
             current_music: None,
-            music_volume: 1.0,
-            sound_volume: 1.0,
+            music_volume: 0.7,
+            sound_volume: 0.8,
         }
     }
     

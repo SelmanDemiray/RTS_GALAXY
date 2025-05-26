@@ -1,68 +1,44 @@
-use crate::game::{GameState, BuildingType, UnitType, ResourceType};
+use crate::game::state::GameState;
+use crate::entity::{BuildingType, UnitType};
 use macroquad::rand::gen_range;
 
 pub fn manage_resources(game_state: &mut GameState) {
-    // Count idle workers
-    let mut idle_worker_ids = Vec::new();
+    let ai_player_id = 1;
     
+    // Find all AI workers
+    let mut worker_positions = Vec::new();
     for unit in &game_state.units {
-        if unit.player_id == 1 && unit.unit_type == UnitType::Worker {
-            if unit.target_x.is_none() && unit.target_y.is_none() {
-                idle_worker_ids.push(unit.id);
-            }
+        if unit.player_id == ai_player_id && unit.unit_type == UnitType::Worker {
+            let carrying = unit.current_resources.unwrap_or(0);
+            worker_positions.push((unit.id, unit.x, unit.y, carrying));
         }
     }
     
-    // Find closest resource node for each idle worker
-    for &worker_id in &idle_worker_ids {
-        if let Some(worker_index) = game_state.units.iter().position(|u| u.id == worker_id) {
-            let worker = &game_state.units[worker_index];
+    // Assign workers to nearby resource nodes if they're not carrying resources
+    for (worker_id, worker_x, worker_y, carrying) in worker_positions {
+        if carrying == 0 {
+            // Find nearest resource node
+            let mut nearest_distance = f32::MAX;
+            let mut nearest_node_pos = None;
             
-            // Find closest resource node
-            let mut closest_node_idx = None;
-            let mut closest_dist = f32::MAX;
-            
-            for (idx, node) in game_state.resource_nodes.iter().enumerate() {
-                // Prefer mineral nodes if we're low on minerals
+            for node in &game_state.resource_nodes {
                 if node.resources > 0 {
-                    let dx = node.x - worker.x;
-                    let dy = node.y - worker.y;
-                    let dist = (dx * dx + dy * dy).sqrt();
-                    
-                    let player = &game_state.players[1];
-                    let minerals_low = player.minerals < 200;
-                    
-                    // Prioritize minerals if we're low
-                    let is_priority = if minerals_low {
-                        node.resource_type == ResourceType::Minerals
-                    } else {
-                        true
-                    };
-                    
-                    if is_priority && dist < closest_dist {
-                        closest_dist = dist;
-                        closest_node_idx = Some(idx);
+                    let distance = ((node.x - worker_x).powi(2) + (node.y - worker_y).powi(2)).sqrt();
+                    if distance < nearest_distance {
+                        nearest_distance = distance;
+                        nearest_node_pos = Some((node.x, node.y));
                     }
                 }
             }
             
-            // Send worker to closest resource
-            if let Some(node_idx) = closest_node_idx {
-                let target_x = game_state.resource_nodes[node_idx].x;
-                let target_y = game_state.resource_nodes[node_idx].y;
-                
-                game_state.units[worker_index].target_x = Some(target_x);
-                game_state.units[worker_index].target_y = Some(target_y);
-            }
-        }
-    }
-    
-    // Update construction progress for AI buildings
-    for unit in &mut game_state.units {
-        if unit.player_id == 1 && unit.unit_type == UnitType::Building {
-            if let Some(progress) = &mut unit.construction_progress {
-                if *progress < 100.0 {
-                    *progress += 0.5; // AI builds faster
+            // Assign worker to gather from nearest node
+            if let Some((node_x, node_y)) = nearest_node_pos {
+                for unit in &mut game_state.units {
+                    if unit.id == worker_id {
+                        unit.target_x = Some(node_x);
+                        unit.target_y = Some(node_y);
+                        break;
+                    }
                 }
             }
         }
@@ -70,72 +46,83 @@ pub fn manage_resources(game_state: &mut GameState) {
 }
 
 pub fn build_structure(game_state: &mut GameState, building_type: BuildingType) {
-    // Find headquarters to build near it
-    if let Some(hq) = game_state.units.iter().find(|u| 
-        u.player_id == 1 && u.unit_type == UnitType::Headquarters
-    ) {
-        // Choose build position
-        let build_x = hq.x + gen_range(-100.0, 100.0);
-        let build_y = hq.y + gen_range(-100.0, 100.0);
-        
-        // Spawn the building
-        let id = game_state.spawn_unit(UnitType::Building, build_x, build_y, 1);
-        
-        // Set building type and mark as under construction
-        if let Some(building) = game_state.units.iter_mut().find(|u| u.id == id) {
-            building.building_type = Some(building_type);
-            building.construction_progress = Some(0.0);
+    let ai_player_id = 1;
+    
+    // Find AI headquarters for positioning
+    let mut hq_pos = None;
+    for unit in &game_state.units {
+        if unit.player_id == ai_player_id && unit.unit_type == UnitType::Headquarters {
+            hq_pos = Some((unit.x, unit.y));
+            break;
         }
+    }
+    
+    if let Some((hq_x, hq_y)) = hq_pos {
+        let cost = get_building_cost(&building_type);
         
-        // Deduct cost
-        game_state.deduct_cost(1, &UnitType::Building);
-        
-        // Assign some workers to build it
-        let mut assigned_workers = 0;
-        for unit in &mut game_state.units {
-            if unit.player_id == 1 && unit.unit_type == UnitType::Worker && assigned_workers < 2 {
-                unit.target_x = Some(build_x);
-                unit.target_y = Some(build_y);
-                assigned_workers += 1;
+        if game_state.players[ai_player_id].minerals >= cost {
+            // Place building near headquarters
+            let build_x = hq_x + gen_range(80.0, 150.0);
+            let build_y = hq_y + gen_range(-100.0, 100.0);
+            
+            let building_id = game_state.spawn_unit(UnitType::Building, build_x, build_y, ai_player_id);
+            
+            // Set building type
+            for unit in &mut game_state.units {
+                if unit.id == building_id {
+                    unit.building_type = Some(building_type);
+                    unit.construction_progress = Some(0.0);
+                    break;
+                }
             }
+            
+            // Deduct cost
+            game_state.players[ai_player_id].minerals -= cost;
         }
     }
 }
 
+fn get_building_cost(building_type: &BuildingType) -> i32 {
+    match building_type {
+        BuildingType::Barracks => 150,
+        BuildingType::ResourceDepot => 175,
+        BuildingType::DefenseTurret => 100,
+        _ => 200,
+    }
+}
+
 pub fn plan_attack(game_state: &mut GameState) {
-    // Count available combat units
-    let mut combat_units = 0;
+    let ai_player_id = 1;
+    
+    // Count combat units
+    let mut combat_units = Vec::new();
     for unit in &game_state.units {
-        if unit.player_id == 1 && (
-            unit.unit_type == UnitType::Fighter || 
-            unit.unit_type == UnitType::Ranger ||
-            unit.unit_type == UnitType::Tank
-        ) {
-            combat_units += 1;
+        if unit.player_id == ai_player_id && 
+           matches!(unit.unit_type, UnitType::Fighter | UnitType::Ranger | UnitType::Tank) {
+            combat_units.push(unit.id);
         }
     }
     
-    // Only attack if we have enough units
-    if combat_units >= 5 {
-        // Find player's headquarters
-        let mut player_hq = None;
+    // If we have enough units, launch an attack on enemy base
+    if combat_units.len() >= 3 {
+        // Find enemy headquarters
+        let mut enemy_hq_pos = None;
         for unit in &game_state.units {
-            if unit.player_id == 0 && unit.unit_type == UnitType::Headquarters {
-                player_hq = Some((unit.x, unit.y));
+            if unit.player_id != ai_player_id && unit.unit_type == UnitType::Headquarters {
+                enemy_hq_pos = Some((unit.x, unit.y));
                 break;
             }
         }
         
-        if let Some((hq_x, hq_y)) = player_hq {
-            // Send all combat units to attack the headquarters
-            for unit in &mut game_state.units {
-                if unit.player_id == 1 && (
-                    unit.unit_type == UnitType::Fighter || 
-                    unit.unit_type == UnitType::Ranger ||
-                    unit.unit_type == UnitType::Tank
-                ) {
-                    unit.target_x = Some(hq_x);
-                    unit.target_y = Some(hq_y);
+        if let Some((hq_x, hq_y)) = enemy_hq_pos {
+            // Send all combat units to attack enemy HQ
+            for unit_id in combat_units {
+                for unit in &mut game_state.units {
+                    if unit.id == unit_id {
+                        unit.target_x = Some(hq_x + gen_range(-50.0, 50.0));
+                        unit.target_y = Some(hq_y + gen_range(-50.0, 50.0));
+                        break;
+                    }
                 }
             }
         }
@@ -143,55 +130,55 @@ pub fn plan_attack(game_state: &mut GameState) {
 }
 
 pub fn make_decisions(game_state: &mut GameState) {
-    // For each combat unit, try to find an enemy or patrol
-    for unit_index in 0..game_state.units.len() {
-        // Skip if not an AI controlled combat unit
-        let unit = &game_state.units[unit_index];
-        
-        if unit.player_id != 1 || 
-           (unit.unit_type != UnitType::Fighter && 
-            unit.unit_type != UnitType::Ranger && 
-            unit.unit_type != UnitType::Tank) {
-            continue;
+    let ai_player_id = 1;
+    
+    // Count different unit types
+    let mut _worker_count = 0;    // Fixed unused variable warning with underscore
+    let mut _fighter_count = 0;   // Fixed unused variable warning with underscore
+    let mut ai_units = Vec::new();
+    
+    for unit in &game_state.units {
+        if unit.player_id == ai_player_id {
+            ai_units.push((unit.id, unit.x, unit.y, unit.unit_type.clone()));
+            match unit.unit_type {
+                UnitType::Worker => _worker_count += 1,
+                UnitType::Fighter => _fighter_count += 1,
+                _ => {}
+            }
         }
-        
-        // If unit has no target, find one
-        if unit.target_x.is_none() || unit.target_y.is_none() {
-            // Try to find an enemy unit to attack
-            let mut closest_enemy = None;
-            let mut closest_dist = f32::MAX;
+    }
+    
+    // Make combat units patrol and attack enemies
+    for (unit_id, unit_x, unit_y, unit_type) in ai_units {
+        if matches!(unit_type, UnitType::Fighter | UnitType::Ranger | UnitType::Tank) {
+            // Look for nearby enemies
+            let mut nearest_enemy = None;
+            let mut nearest_distance = 200.0; // Attack range
             
             for enemy in &game_state.units {
-                if enemy.player_id == 0 {
-                    let dx = enemy.x - unit.x;
-                    let dy = enemy.y - unit.y;
-                    let dist = (dx * dx + dy * dy).sqrt();
-                    
-                    if dist < closest_dist {
-                        closest_dist = dist;
-                        closest_enemy = Some((enemy.x, enemy.y));
+                if enemy.player_id != ai_player_id {
+                    let distance = ((enemy.x - unit_x).powi(2) + (enemy.y - unit_y).powi(2)).sqrt();
+                    if distance < nearest_distance {
+                        nearest_distance = distance;
+                        nearest_enemy = Some((enemy.x, enemy.y));
                     }
                 }
             }
             
-            // Either attack closest enemy or patrol
-            if let Some((enemy_x, enemy_y)) = closest_enemy {
-                // Move toward enemy
-                if let Some(unit) = game_state.units.get_mut(unit_index) {
-                    unit.target_x = Some(enemy_x);
-                    unit.target_y = Some(enemy_y);
-                }
-            } else {
-                // Patrol near base
-                let base_x = 900.0; // AI base location
-                let base_y = 700.0;
-                
-                let patrol_x = base_x + gen_range(-150.0, 150.0);
-                let patrol_y = base_y + gen_range(-150.0, 150.0);
-                
-                if let Some(unit) = game_state.units.get_mut(unit_index) {
-                    unit.target_x = Some(patrol_x);
-                    unit.target_y = Some(patrol_y);
+            // Attack nearest enemy or patrol
+            for unit in &mut game_state.units {
+                if unit.id == unit_id {
+                    if let Some((enemy_x, enemy_y)) = nearest_enemy {
+                        unit.target_x = Some(enemy_x);
+                        unit.target_y = Some(enemy_y);
+                    } else if unit.target_x.is_none() {
+                        // Patrol around base
+                        let patrol_x = unit_x + gen_range(-100.0, 100.0);
+                        let patrol_y = unit_y + gen_range(-100.0, 100.0);
+                        unit.target_x = Some(patrol_x);
+                        unit.target_y = Some(patrol_y);
+                    }
+                    break;
                 }
             }
         }

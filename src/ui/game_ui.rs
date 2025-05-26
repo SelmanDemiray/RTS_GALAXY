@@ -1,15 +1,17 @@
 use macroquad::prelude::*;
-use crate::game::{GameState, GameMode, GameScreen};
-use crate::network::NetworkClient;
-use crate::resources::ResourceManager;
-use crate::entity::UnitType;
+use crate::game::{GameState, GameMode};
+use crate::game::screens::GameScreen;
+use crate::network::NetworkClient; // Fixed import
+use crate::resources::manager::ResourceManager;
 use crate::audio::AudioManager;
+use crate::entity::{BuildingType, UnitType};
+use crate::game::commands::Command;
 
 pub fn draw_ui(
-    game_state: &mut GameState, 
-    network_client: &mut NetworkClient, 
+    game_state: &mut GameState,
+    network_client: &mut NetworkClient,
     resource_manager: &ResourceManager,
-    audio_manager: &mut AudioManager
+    audio_manager: &mut AudioManager,
 ) {
     // Draw top bar with resources
     let bar_height = 50.0;
@@ -91,6 +93,64 @@ pub fn draw_ui(
         GameMode::Offline => "Offline"
     };
     draw_text(status_text, screen_width() - 100.0, 60.0, 16.0, WHITE);
+    
+    // Draw basic game UI
+    draw_text("Game UI", 10.0, screen_height() - 30.0, 20.0, WHITE);
+    
+    // Show controls
+    draw_text("Controls: WASD to move camera, Mouse to select units", 10.0, screen_height() - 60.0, 16.0, LIGHTGRAY);
+    
+    egui_macroquad::ui(|egui_ctx| {
+        // Command Panel
+        egui_macroquad::egui::Window::new("Commands").show(egui_ctx, |ui| {
+            if !game_state.selected_units.is_empty() {
+                if ui.button("Build Barracks").clicked() {
+                    audio_manager.play_ui_click(resource_manager, game_state);
+                    game_state.current_command = Some(Command::Build { 
+                        building_type: BuildingType::Barracks,
+                        x: 0.0,
+                        y: 0.0 
+                    });
+                }
+                if ui.button("Gather Resources").clicked() {
+                    audio_manager.play_ui_click(resource_manager, game_state);
+                    game_state.current_command = Some(Command::Gather { resource_id: 0 });
+                }
+            }
+        });
+
+        // Unit Training Panel
+        egui_macroquad::egui::Window::new("Train Units").show(egui_ctx, |ui| {
+            if ui.button("Train Worker (50 minerals)").clicked() && game_state.can_afford(0, &UnitType::Worker) {
+                audio_manager.play_build_sound(resource_manager, game_state);
+                
+                // Find HQ position
+                if let Some(headquarters) = game_state.units.iter().find(|u| 
+                    u.unit_type == UnitType::Headquarters && u.player_id == game_state.current_player_id) {
+                    let hq_pos = (headquarters.x, headquarters.y);
+                    let spawn_pos = (hq_pos.0 + 50.0, hq_pos.1 + 50.0);
+                    
+                    // Create worker and deduct cost
+                    game_state.spawn_unit(UnitType::Worker, spawn_pos.0, spawn_pos.1, game_state.current_player_id);
+                    game_state.deduct_cost(game_state.current_player_id as usize, &UnitType::Worker);
+                }
+            }
+        });
+
+        // Combat Panel
+        egui_macroquad::egui::Window::new("Combat").show(egui_ctx, |ui| {
+            if !game_state.selected_units.is_empty() {
+                if ui.button("Attack").clicked() {
+                    audio_manager.play_ui_click(resource_manager, game_state);
+                    game_state.current_command = Some(Command::Attack { target_id: 0 });
+                }
+                if ui.button("Stop").clicked() {
+                    audio_manager.play_ui_click(resource_manager, game_state);
+                    game_state.current_command = Some(Command::Stop);
+                }
+            }
+        });
+    });
 }
 
 fn draw_unit_info(
@@ -131,16 +191,20 @@ fn draw_unit_info(
                 UnitType::Worker => {
                     if draw_button(button_start_x, button_y, button_width, button_height, "Build") {
                         audio_manager.play_ui_click(resource_manager, game_state);
-                        game_state.current_command = Some(crate::game::types::Command::Build(crate::entity::BuildingType::Barracks));
+                        game_state.current_command = Some(Command::Build {
+                            building_type: BuildingType::Barracks,
+                            x: 0.0,
+                            y: 0.0
+                        });
                     }
                     
                     if draw_button(button_start_x + button_width + button_spacing, button_y, button_width, button_height, "Gather") {
                         audio_manager.play_ui_click(resource_manager, game_state);
-                        game_state.current_command = Some(crate::game::types::Command::Gather);
+                        game_state.current_command = Some(Command::Gather { resource_id: 0 });
                     }
                 },
                 UnitType::Headquarters => {
-                    let player = &game_state.players[game_state.current_player_id as usize];
+                    let player = &game_state.players[game_state.current_player_id];
                     
                     // Highlight button if can afford, gray out if cannot
                     let can_afford_worker = player.minerals >= 50;
@@ -160,13 +224,13 @@ fn draw_unit_info(
                         
                         // Create worker and deduct cost
                         game_state.spawn_unit(UnitType::Worker, spawn_pos.0, spawn_pos.1, game_state.current_player_id);
-                        game_state.deduct_cost(game_state.current_player_id, &UnitType::Worker);
+                        game_state.deduct_cost(game_state.current_player_id as usize, &UnitType::Worker);
                     }
                 },
                 _ => {
                     if draw_button(button_start_x, button_y, button_width, button_height, "Attack") {
                         audio_manager.play_ui_click(resource_manager, game_state);
-                        game_state.current_command = Some(crate::game::types::Command::Attack);
+                        game_state.current_command = Some(Command::Attack { target_id: 0 });
                     }
                     
                     if draw_button(button_start_x + button_width + button_spacing, button_y, button_width, button_height, "Stop") {

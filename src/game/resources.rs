@@ -1,5 +1,6 @@
 use crate::game::types::ResourceType;
 
+#[derive(Debug, Clone)]
 pub struct ResourceNode {
     pub x: f32,
     pub y: f32,

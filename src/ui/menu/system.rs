@@ -1,181 +1,233 @@
 use macroquad::prelude::*;
 use crate::game::{GameState, GameScreen};
 use crate::resources::ResourceManager;
-use super::{main_menu, settings, credits};
+use crate::audio::AudioManager;
 
-#[allow(dead_code)]
 pub struct MenuSystem {
-    title_font_size: f32,
-    button_font_size: f32,
-    button_width: f32,
-    button_height: f32,
-    #[allow(dead_code)]
-    button_padding: f32,  // Keeping this field for future use
-    title_y: f32,
-    first_button_y: f32,
-    button_spacing: f32,
-    // Add references to UI resources
-    button_normal: Option<Texture2D>,
-    button_hover: Option<Texture2D>,
-    button_pressed: Option<Texture2D>,
-    title_font: Option<Font>,
-    button_font: Option<Font>,
+    pub selected_button: usize, // Make this public
 }
 
-#[allow(dead_code)]
 impl MenuSystem {
     pub fn new() -> Self {
         Self {
-            title_font_size: 48.0,
-            button_font_size: 24.0,
-            button_width: 200.0,
-            button_height: 50.0,
-            button_padding: 10.0,
-            title_y: 120.0,
-            first_button_y: 240.0,
-            button_spacing: 70.0,
-            button_normal: None,
-            button_hover: None,
-            button_pressed: None,
-            title_font: None,
-            button_font: None,
+            selected_button: 0,
         }
     }
-    
-    pub fn initialize(&mut self, resource_manager: &ResourceManager) {
-        // Load UI resources when available
-        self.button_normal = resource_manager.get_texture("ui_button_normal").cloned();
-        self.button_hover = resource_manager.get_texture("ui_button_hover").cloned();
-        self.button_pressed = resource_manager.get_texture("ui_button_pressed").cloned();
+
+    pub fn initialize(&mut self, _resource_manager: &ResourceManager) {
+        self.selected_button = 0;
+    }
+
+    // Add missing helper methods for modular menu system
+    pub fn get_title_font_size(&self) -> f32 {
+        72.0
+    }
+
+    pub fn get_title_y(&self) -> f32 {
+        screen_height() * 0.3
+    }
+
+    pub fn get_first_button_y(&self) -> f32 {
+        screen_height() * 0.5
+    }
+
+    pub fn get_button_spacing(&self) -> f32 {
+        60.0
+    }
+
+    pub fn draw_button(&self, text: &str, y: f32, target_screen: GameScreen, _game_state: &GameState) {
+        let screen_width = screen_width();
+        let button_width = measure_text(text, None, 32, 1.0).width;
+        let x = (screen_width - button_width) / 2.0;
         
-        // Use title font if available, otherwise use default font
-        self.title_font = resource_manager.get_font("title_font").cloned()
-            .or_else(|| resource_manager.get_font("default").cloned());
-            
-        self.button_font = resource_manager.get_font("ui_font").cloned()
-            .or_else(|| resource_manager.get_font("default").cloned());
-    }
-    
-    pub fn update(&mut self, game_state: &mut GameState) {
-        if is_key_pressed(KeyCode::Escape) && game_state.current_screen != GameScreen::MainMenu {
-            game_state.current_screen = GameScreen::MainMenu;
+        // Determine if this button should be highlighted
+        let is_selected = match target_screen {
+            GameScreen::Playing => self.selected_button == 0,
+            GameScreen::Settings => self.selected_button == 1,
+            GameScreen::Credits => self.selected_button == 2,
+            GameScreen::Quit => self.selected_button == 3,
+            GameScreen::MainMenu => true, // For back buttons
+        };
+        
+        let color = if is_selected { YELLOW } else { WHITE };
+        draw_text(text, x, y, 32.0, color);
+        
+        if is_selected {
+            draw_text(">", x - 30.0, y, 32.0, YELLOW);
+            draw_text("<", x + button_width + 10.0, y, 32.0, YELLOW);
         }
     }
-    
-    pub fn draw(&self, game_state: &mut GameState, _resource_manager: &ResourceManager) {
+
+    pub fn update(&mut self, game_state: &mut GameState, _resource_manager: &ResourceManager, _audio_manager: &mut AudioManager) {
         match game_state.current_screen {
-            GameScreen::MainMenu => main_menu::draw(self, game_state),
-            GameScreen::Settings => self.draw_settings(game_state),
-            GameScreen::Credits => self.draw_credits(game_state),
-            _ => {} // Do nothing for other screens
+            GameScreen::MainMenu => self.update_main_menu(game_state),
+            GameScreen::Settings => self.update_settings(game_state),
+            GameScreen::Credits => self.update_credits(game_state),
+            _ => {}
         }
     }
-    
-    pub fn draw_button(&self, text: &str, y: f32, screen: GameScreen, game_state: &mut GameState) -> bool {
-        let screen_center_x = screen_width() / 2.0;
-        let button_x = screen_center_x - self.button_width / 2.0;
-        
-        // Draw button background
-        let rect = Rect::new(button_x, y, self.button_width, self.button_height);
-        let mouse_pos = mouse_position();
-        let mouse_over = rect.contains(Vec2::new(mouse_pos.0, mouse_pos.1));
-        
-        let clicked = mouse_over && is_mouse_button_pressed(MouseButton::Left);
-        
-        // Use texture if available, otherwise draw colored rectangle
-        if let (Some(normal), Some(hover), Some(pressed)) = 
-           (&self.button_normal, &self.button_hover, &self.button_pressed) {
-            // Use the appropriate texture based on button state
-            let texture = if clicked {
-                pressed
-            } else if mouse_over {
-                hover
-            } else {
-                normal
-            };
-            
-            draw_texture_ex(
-                *texture,
-                rect.x, rect.y,
-                WHITE,
-                DrawTextureParams {
-                    dest_size: Some(Vec2::new(rect.w, rect.h)),
-                    ..Default::default()
-                }
-            );
-        } else {
-            // Fallback to colored rectangles if textures aren't available
-            let color = if clicked {
-                Color::new(0.3, 0.3, 0.7, 1.0)
-            } else if mouse_over {
-                Color::new(0.4, 0.4, 0.8, 1.0)
-            } else {
-                Color::new(0.2, 0.2, 0.6, 1.0)
-            };
-            
-            draw_rectangle(rect.x, rect.y, rect.w, rect.h, color);
-            draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, 2.0, WHITE);
+
+    fn update_main_menu(&mut self, game_state: &mut GameState) {
+        // Handle keyboard navigation
+        if is_key_pressed(KeyCode::Up) {
+            self.selected_button = if self.selected_button == 0 { 3 } else { self.selected_button - 1 };
+        }
+        if is_key_pressed(KeyCode::Down) {
+            self.selected_button = (self.selected_button + 1) % 4;
         }
         
-        // Draw button text with the appropriate font if available
-        if let Some(font) = &self.button_font {
-            let text_params = TextParams {
-                font: *font,
-                font_size: self.button_font_size as u16,
-                color: WHITE,
-                ..Default::default()
-            };
-            
-            let text_size = measure_text(text, Some(*font), self.button_font_size as u16, 1.0);
-            
-            draw_text_ex(
-                text,
-                screen_center_x - text_size.width / 2.0,
-                y + self.button_height / 2.0 + text_size.height / 2.0,
-                text_params
-            );
-        } else {
-            // Fallback to default text drawing
-            let text_size = measure_text(text, None, self.button_font_size as u16, 1.0);
-            draw_text(
-                text,
-                screen_center_x - text_size.width / 2.0,
-                y + self.button_height / 2.0 + text_size.height / 2.0,
-                self.button_font_size,
-                WHITE
-            );
+        if is_key_pressed(KeyCode::Enter) {
+            match self.selected_button {
+                0 => game_state.current_screen = GameScreen::Playing,
+                1 => game_state.current_screen = GameScreen::Settings,
+                2 => game_state.current_screen = GameScreen::Credits,
+                3 => game_state.request_quit(),
+                _ => {}
+            }
         }
+    }
+
+    fn update_settings(&mut self, game_state: &mut GameState) {
+        if is_key_pressed(KeyCode::Escape) {
+            game_state.current_screen = GameScreen::MainMenu;
+            self.selected_button = 1; // Return to Settings button
+        }
+    }
+
+    fn update_credits(&mut self, game_state: &mut GameState) {
+        if is_key_pressed(KeyCode::Escape) {
+            game_state.current_screen = GameScreen::MainMenu;
+            self.selected_button = 2; // Return to Credits button
+        }
+    }
+
+    pub fn draw(&self, game_state: &GameState, _resource_manager: &ResourceManager) { 
+        match game_state.current_screen {
+            GameScreen::MainMenu => {
+                clear_background(Color::new(0.1, 0.1, 0.15, 1.0));
+                super::main_menu::draw(self, game_state);
+            },
+            GameScreen::Settings => {
+                clear_background(Color::new(0.1, 0.1, 0.15, 1.0));
+                super::settings::draw(self, game_state);
+            },
+            GameScreen::Credits => self.draw_credits(),
+            _ => {}
+        }
+    }
+
+    fn draw_main_menu(&self) {
+        let screen_width = screen_width();
+        let screen_height = screen_height();
         
-        // Handle click
-        if clicked {
-            if text == "Quit" {
-                std::process::exit(0);
-            } else {
-                // Directly update the game state screen
-                game_state.current_screen = screen;
+        // Draw background
+        clear_background(Color::new(0.1, 0.1, 0.15, 1.0));
+        
+        // Draw title
+        let title = "Fantasy RTS";
+        let title_size = 72.0;
+        let title_width = measure_text(title, None, title_size as u16, 1.0).width;
+        draw_text(title, (screen_width - title_width) / 2.0, screen_height * 0.3, title_size, GOLD);
+        
+        // Draw menu buttons
+        let buttons = ["Start Game", "Settings", "Credits", "Quit"];
+        let button_y_start = screen_height * 0.5;
+        let button_spacing = 60.0;
+        
+        for (i, button_text) in buttons.iter().enumerate() {
+            let y = button_y_start + i as f32 * button_spacing;
+            let button_width = measure_text(button_text, None, 32, 1.0).width;
+            let x = (screen_width - button_width) / 2.0;
+            
+            let color = if i == self.selected_button { YELLOW } else { WHITE };
+            draw_text(button_text, x, y, 32.0, color);
+            
+            if i == self.selected_button {
+                draw_text(">", x - 30.0, y, 32.0, YELLOW);
+                draw_text("<", x + button_width + 10.0, y, 32.0, YELLOW);
             }
         }
         
-        clicked
+        // Draw instructions
+        let instructions = "Use UP/DOWN arrows and ENTER to navigate";
+        let inst_width = measure_text(instructions, None, 20, 1.0).width;
+        draw_text(instructions, (screen_width - inst_width) / 2.0, screen_height * 0.9, 20.0, GRAY);
     }
-    
-    pub fn draw_settings(&self, game_state: &mut GameState) {
-        settings::draw(self, game_state);
+
+    fn draw_settings(&self, game_state: &GameState) {
+        let screen_width = screen_width();
+        let screen_height = screen_height();
+        
+        clear_background(Color::new(0.1, 0.1, 0.15, 1.0));
+        
+        // Draw title
+        let title = "Settings";
+        let title_size = 48.0;
+        let title_width = measure_text(title, None, title_size as u16, 1.0).width;
+        draw_text(title, (screen_width - title_width) / 2.0, screen_height * 0.2, title_size, GOLD);
+        
+        // Draw volume controls
+        let y_start = screen_height * 0.4;
+        let line_height = 40.0;
+        
+        // Sound Volume
+        let sound_text = format!("Sound Volume: {:.0}%", game_state.sound_volume * 100.0);
+        draw_text(&sound_text, 100.0, y_start, 24.0, WHITE);
+        
+        // Music Volume  
+        let music_text = format!("Music Volume: {:.0}%", game_state.music_volume * 100.0);
+        draw_text(&music_text, 100.0, y_start + line_height, 24.0, WHITE);
+        
+        // Mute toggles
+        let sound_mute_text = format!("Sound Muted: {}", if game_state.sound_muted { "Yes" } else { "No" });
+        draw_text(&sound_mute_text, 100.0, y_start + line_height * 2.0, 24.0, WHITE);
+        
+        let music_mute_text = format!("Music Muted: {}", if game_state.music_muted { "Yes" } else { "No" });
+        draw_text(&music_mute_text, 100.0, y_start + line_height * 3.0, 24.0, WHITE);
+        
+        // Instructions
+        draw_text("Press ESC to return to main menu", 100.0, screen_height * 0.8, 20.0, GRAY);
     }
-    
-    pub fn draw_credits(&self, game_state: &mut GameState) {
-        credits::draw(self, game_state);
+
+    fn draw_credits(&self) {
+        let screen_width = screen_width();
+        let _screen_height = screen_height();
+        
+        clear_background(Color::new(0.1, 0.1, 0.15, 1.0));
+        
+        // Draw title
+        let title = "Credits";
+        let title_size = 48.0;
+        let title_width = measure_text(title, None, title_size as u16, 1.0).width;
+        draw_text(title, (screen_width - title_width) / 2.0, 150.0, title_size, GOLD);
+        
+        // Draw credits
+        let credits = [
+            "Fantasy RTS Game",
+            "",
+            "Built with Rust and Macroquad",
+            "",
+            "Game Design: AI Assistant",
+            "Programming: AI Assistant",
+            "Graphics: Macroquad",
+            "",
+            "Special Thanks:",
+            "- Rust Community",
+            "- Macroquad Framework",
+            "- Open Source Contributors",
+        ];
+        
+        let start_y = 250.0;
+        for (i, line) in credits.iter().enumerate() {
+            let line_width = measure_text(line, None, 24, 1.0).width;
+            let x = (screen_width - line_width) / 2.0;
+            let y = start_y + i as f32 * 30.0;
+            draw_text(line, x, y, 24.0, WHITE);
+        }
+        
+        // Instructions
+        let instructions = "Press ESC to return to main menu";
+        let inst_width = measure_text(instructions, None, 20, 1.0).width;
+        draw_text(instructions, (screen_width - inst_width) / 2.0, screen_height() * 0.9, 20.0, GRAY);
     }
-    
-    // Getter methods for menu components to access properties
-    pub fn get_title_font_size(&self) -> f32 { self.title_font_size }
-    #[allow(dead_code)]
-    pub fn get_button_font_size(&self) -> f32 { self.button_font_size }
-    #[allow(dead_code)]
-    pub fn get_button_width(&self) -> f32 { self.button_width }
-    #[allow(dead_code)]
-    pub fn get_button_height(&self) -> f32 { self.button_height }
-    pub fn get_title_y(&self) -> f32 { self.title_y }
-    pub fn get_first_button_y(&self) -> f32 { self.first_button_y }
-    pub fn get_button_spacing(&self) -> f32 { self.button_spacing }
 }

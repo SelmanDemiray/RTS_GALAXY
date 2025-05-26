@@ -10,6 +10,14 @@ $oldFiles = @(
     "src\ai.rs"
 )
 
+# Check for duplicate module files that could cause conflicts
+$duplicateFiles = @(
+    "src\ui\game_ui\mod.rs",
+    "src\ui\menu\game_ui.rs",
+    "src\game\mod.rs",
+    "src\entity\mod.rs"
+)
+
 # Check if files exist before trying to delete them
 foreach ($file in $oldFiles) {
     $fullPath = Join-Path -Path "d:\RUST_RTS_v2" -ChildPath $file
@@ -19,6 +27,16 @@ foreach ($file in $oldFiles) {
         Remove-Item -Path $fullPath -Force
     } else {
         Write-Host "File already removed or doesn't exist: $fullPath"
+    }
+}
+
+# Remove any duplicate module files
+foreach ($file in $duplicateFiles) {
+    $fullPath = Join-Path -Path "d:\RUST_RTS_v2" -ChildPath $file
+    
+    if (Test-Path -Path $fullPath) {
+        Write-Host "Removing duplicate module file: $fullPath"
+        Remove-Item -Path $fullPath -Force
     }
 }
 

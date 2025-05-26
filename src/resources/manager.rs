@@ -1,13 +1,12 @@
 use macroquad::prelude::*;
-use macroquad::audio::{Sound, load_sound};
+use macroquad::audio::Sound;
 use std::collections::HashMap;
 use std::path::Path;
 use serde::{Deserialize, Serialize};
-use std::fs;
 
 // Asset manifest structures
 #[derive(Serialize, Deserialize)]
-struct TextureInfo {
+pub struct TextureInfo {
     name: String,
     file: String,
     dimensions: [u32; 2],
@@ -16,7 +15,7 @@ struct TextureInfo {
 }
 
 #[derive(Serialize, Deserialize)]
-struct SoundInfo {
+pub struct SoundInfo {
     name: String,
     file: String,
     #[serde(default = "default_volume")]
@@ -29,19 +28,19 @@ fn default_volume() -> f32 {
 }
 
 #[derive(Serialize, Deserialize)]
-struct MusicInfo {
+pub struct MusicInfo {
     name: String,
     file: String,
 }
 
 #[derive(Serialize, Deserialize)]
-struct FontInfo {
+pub struct FontInfo {
     name: String,
     file: String,
 }
 
 #[derive(Serialize, Deserialize)]
-struct TextureCategory {
+pub struct TextureCategory {
     units: Vec<TextureInfo>,
     buildings: Vec<TextureInfo>,
     resources: Vec<TextureInfo>,
@@ -51,7 +50,7 @@ struct TextureCategory {
 }
 
 #[derive(Serialize, Deserialize)]
-struct SoundCategory {
+pub struct SoundCategory {
     units: Vec<SoundInfo>,
     buildings: Vec<SoundInfo>,
     ui: Vec<SoundInfo>,
@@ -59,7 +58,7 @@ struct SoundCategory {
 }
 
 #[derive(Serialize, Deserialize)]
-struct AssetManifest {
+pub struct AssetManifest {
     textures: TextureCategory,
     sounds: SoundCategory,
     music: Vec<MusicInfo>,
@@ -69,11 +68,8 @@ struct AssetManifest {
 pub struct ResourceManager {
     textures: HashMap<String, Texture2D>,
     sounds: HashMap<String, Sound>,
-    music: HashMap<String, Sound>,
     fonts: HashMap<String, Font>,
-    // Track if we've loaded all assets
-    assets_loaded: bool,
-    // Track the total number of assets and how many are loaded
+    loading_progress: f32,
     total_assets: usize,
     loaded_assets: usize,
 }
@@ -83,185 +79,197 @@ impl ResourceManager {
         Self {
             textures: HashMap::new(),
             sounds: HashMap::new(),
-            music: HashMap::new(),
             fonts: HashMap::new(),
-            assets_loaded: false,
+            loading_progress: 0.0,
             total_assets: 0,
             loaded_assets: 0,
         }
     }
-    
+
     pub async fn load_resources(&mut self) {
-        // First try to load the asset manifest
-        let manifest_result = self.load_asset_manifest().await;
-        
-        match manifest_result {
-            Ok(manifest) => {
-                // Count total assets to track loading progress
-                self.total_assets = 
-                    manifest.textures.units.len() +
-                    manifest.textures.buildings.len() +
-                    manifest.textures.resources.len() +
-                    manifest.textures.terrain.len() +
-                    manifest.textures.ui.len() +
-                    manifest.textures.effects.len() +
-                    manifest.sounds.units.len() +
-                    manifest.sounds.buildings.len() +
-                    manifest.sounds.ui.len() +
-                    manifest.sounds.game.len() +
-                    manifest.music.len() +
-                    manifest.fonts.len();
-                
-                // Load textures
-                self.load_texture_category(&manifest.textures.units, "units").await;
-                self.load_texture_category(&manifest.textures.buildings, "buildings").await;
-                self.load_texture_category(&manifest.textures.resources, "resources").await;
-                self.load_texture_category(&manifest.textures.terrain, "terrain").await;
-                self.load_texture_category(&manifest.textures.ui, "ui").await;
-                self.load_texture_category(&manifest.textures.effects, "effects").await;
-                
-                // Load sounds
-                self.load_sound_category(&manifest.sounds.units).await;
-                self.load_sound_category(&manifest.sounds.buildings).await;
-                self.load_sound_category(&manifest.sounds.ui).await;
-                self.load_sound_category(&manifest.sounds.game).await;
-                
-                // Load music
-                for music_info in &manifest.music {
-                    if let Some(sound) = self.load_music(&music_info.file).await {
-                        self.music.insert(music_info.name.clone(), sound);
-                        self.loaded_assets += 1;
-                    }
+        // Load from manifest if it exists, otherwise load basic assets
+        if let Ok(manifest_data) = macroquad::prelude::load_string("assets/asset_manifest.json").await {
+            if let Ok(manifest) = serde_json::from_str::<AssetManifest>(&manifest_data) {
+                self.load_from_manifest(manifest).await;
+                return;
+            }
+        }
+
+        // Fallback to basic resource loading
+        self.load_basic_resources().await;
+    }
+
+    async fn load_from_manifest(&mut self, manifest: AssetManifest) {
+        // Count total assets
+        self.total_assets = manifest.textures.units.len() +
+                           manifest.textures.buildings.len() +
+                           manifest.textures.resources.len() +
+                           manifest.textures.terrain.len() +
+                           manifest.textures.ui.len() +
+                           manifest.sounds.units.len() +
+                           manifest.sounds.buildings.len() +
+                           manifest.sounds.ui.len() +
+                           manifest.sounds.game.len() +
+                           manifest.music.len() +
+                           manifest.fonts.len();
+
+        // Load textures
+        for texture_info in manifest.textures.units.iter()
+            .chain(manifest.textures.buildings.iter())
+            .chain(manifest.textures.resources.iter())
+            .chain(manifest.textures.terrain.iter())
+            .chain(manifest.textures.ui.iter()) {
+            self.load_texture_from_info(texture_info).await;
+        }
+
+        // Load sounds
+        for sound_info in manifest.sounds.units.iter()
+            .chain(manifest.sounds.buildings.iter())
+            .chain(manifest.sounds.ui.iter())
+            .chain(manifest.sounds.game.iter()) {
+            self.load_sound_from_info(sound_info).await;
+        }
+
+        // Load music
+        for music_info in manifest.music.iter() {
+            self.load_music_from_info(music_info).await;
+        }
+
+        // Load fonts
+        for font_info in manifest.fonts.iter() {
+            self.load_font_from_info(font_info).await;
+        }
+    }
+
+    async fn load_basic_resources(&mut self) {
+        // Basic fallback resources
+        let basic_assets = vec![
+            ("worker", "assets/textures/units/worker.png"),
+            ("fighter", "assets/textures/units/fighter.png"),
+            ("headquarters", "assets/textures/buildings/headquarters.png"),
+            ("button_click", "assets/sounds/ui/button_click.wav"),
+            ("main_theme", "assets/music/main_theme.ogg"),
+        ];
+
+        self.total_assets = basic_assets.len();
+
+        for (name, path) in basic_assets {
+            if path.ends_with(".png") {
+                if let Ok(texture) = macroquad::prelude::load_texture(path).await {
+                    self.textures.insert(name.to_string(), texture);
                 }
-                
-                // Load fonts
-                for font_info in &manifest.fonts {
-                    if let Some(font) = self.load_font(&font_info.file).await {
-                        self.fonts.insert(font_info.name.clone(), font);
-                        self.loaded_assets += 1;
-                    }
+            } else if path.ends_with(".wav") || path.ends_with(".ogg") {
+                if let Ok(sound) = macroquad::audio::load_sound(path).await {
+                    self.sounds.insert(name.to_string(), sound);
                 }
-            },
-            Err(e) => {
-                println!("Failed to load asset manifest: {}", e);
-                // Fallback to built-in font if manifest loading fails
-                self.fonts.insert("default".to_string(), Font::default());
+            }
+            self.loaded_assets += 1;
+            self.update_progress();
+        }
+    }
+
+    async fn load_texture_from_info(&mut self, texture_info: &TextureInfo) {
+        let full_path = format!("assets/{}", texture_info.file);
+        if let Ok(texture) = macroquad::prelude::load_texture(&full_path).await {
+            self.textures.insert(texture_info.name.clone(), texture);
+        }
+        self.loaded_assets += 1;
+        self.update_progress();
+    }
+
+    async fn load_sound_from_info(&mut self, sound_info: &SoundInfo) {
+        let full_path = format!("assets/{}", sound_info.file);
+        if let Ok(sound) = macroquad::audio::load_sound(&full_path).await {
+            self.sounds.insert(sound_info.name.clone(), sound);
+        }
+        self.loaded_assets += 1;
+        self.update_progress();
+    }
+
+    async fn load_music_from_info(&mut self, music_info: &MusicInfo) {
+        let full_path = format!("assets/{}", music_info.file);
+        if let Ok(sound) = macroquad::audio::load_sound(&full_path).await {
+            self.sounds.insert(music_info.name.clone(), sound);
+        }
+        self.loaded_assets += 1;
+        self.update_progress();
+    }
+
+    async fn load_font_from_info(&mut self, font_info: &FontInfo) {
+        let full_path = format!("assets/{}", font_info.file);
+        if let Ok(font_data) = macroquad::prelude::load_file(&full_path).await {
+            if let Ok(font) = macroquad::prelude::load_ttf_font_from_bytes(&font_data) {
+                self.fonts.insert(font_info.name.clone(), font);
             }
         }
-        
-        // If we couldn't load any assets, ensure we at least have a default font
-        if self.fonts.is_empty() {
-            self.fonts.insert("default".to_string(), Font::default());
-        }
-        
-        // Mark assets as loaded
-        self.assets_loaded = true;
+        self.loaded_assets += 1;
+        self.update_progress();
     }
-    
-    async fn load_asset_manifest(&self) -> Result<AssetManifest, String> {
-        let manifest_path = "assets/asset_manifest.json";
-        
-        if !Path::new(manifest_path).exists() {
-            return Err(format!("Asset manifest not found at {}", manifest_path));
-        }
-        
-        match fs::read_to_string(manifest_path) {
-            Ok(content) => {
-                match serde_json::from_str::<AssetManifest>(&content) {
-                    Ok(manifest) => Ok(manifest),
-                    Err(e) => Err(format!("Failed to parse asset manifest: {}", e))
-                }
-            },
-            Err(e) => Err(format!("Failed to read asset manifest: {}", e))
+
+    fn update_progress(&mut self) {
+        if self.total_assets > 0 {
+            self.loading_progress = self.loaded_assets as f32 / self.total_assets as f32;
+        } else {
+            self.loading_progress = 1.0;
         }
     }
-    
-    async fn load_texture_category(&mut self, textures: &[TextureInfo], category: &str) {
-        for texture_info in textures {
-            if let Some(texture) = self.load_texture(&texture_info.file).await {
-                let key = if category.is_empty() {
-                    texture_info.name.clone()
-                } else {
-                    format!("{}_{}", category, texture_info.name)
-                };
-                
-                self.textures.insert(key, texture);
-                self.loaded_assets += 1;
-            }
-        }
+
+    pub fn is_loading_complete(&self) -> bool {
+        self.loading_progress >= 1.0
     }
-    
-    async fn load_sound_category(&mut self, sounds: &[SoundInfo]) {
-        for sound_info in sounds {
-            if let Some(sound) = self.load_sound(&sound_info.file).await {
-                self.sounds.insert(sound_info.name.clone(), sound);
-                self.loaded_assets += 1;
-            }
-        }
+
+    pub fn get_loading_progress(&self) -> f32 {
+        self.loading_progress
     }
-    
-    async fn load_texture(&self, path: &str) -> Option<Texture2D> {
-        match load_texture(path).await {
-            Ok(texture) => Some(texture),
-            Err(e) => {
-                println!("Failed to load texture {}: {:?}", path, e);
-                None
-            }
-        }
-    }
-    
-    async fn load_sound(&self, path: &str) -> Option<Sound> {
-        match load_sound(path).await {
-            Ok(sound) => Some(sound),
-            Err(e) => {
-                println!("Failed to load sound {}: {:?}", path, e);
-                None
-            }
-        }
-    }
-    
-    async fn load_music(&self, path: &str) -> Option<Sound> {
-        // Music is loaded the same way as sound in macroquad
-        self.load_sound(path).await
-    }
-    
-    async fn load_font(&self, path: &str) -> Option<Font> {
-        match load_ttf_font(path).await {
-            Ok(font) => Some(font),
-            Err(e) => {
-                println!("Failed to load font {}: {:?}", path, e);
-                None
-            }
-        }
-    }
-    
-    #[allow(dead_code)]
+
+    #[allow(dead_code)] // Will be used when texture rendering is implemented
     pub fn get_texture(&self, name: &str) -> Option<&Texture2D> {
         self.textures.get(name)
     }
-    
-    #[allow(dead_code)]
+
     pub fn get_sound(&self, name: &str) -> Option<&Sound> {
         self.sounds.get(name)
     }
-    
-    pub fn get_music(&self, name: &str) -> Option<&Sound> {
-        self.music.get(name)
-    }
-    
-    #[allow(dead_code)]
+
+    #[allow(dead_code)] // Will be used when custom fonts are implemented
     pub fn get_font(&self, name: &str) -> Option<&Font> {
         self.fonts.get(name)
     }
-    
-    pub fn is_loading_complete(&self) -> bool {
-        self.assets_loaded
+
+    pub fn get_music(&self, name: &str) -> Option<&Sound> {
+        self.sounds.get(name)
     }
-    
-    pub fn get_loading_progress(&self) -> f32 {
-        if self.total_assets == 0 {
-            return 1.0;
-        }
-        self.loaded_assets as f32 / self.total_assets as f32
+
+    #[allow(dead_code)]
+    pub async fn load_sound_from_bytes(&mut self, name: &str, data: &[u8], _path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let sound = macroquad::audio::load_sound_from_bytes(data).await?;
+        self.sounds.insert(name.to_string(), sound);
+        Ok(())
+    }
+
+    #[allow(dead_code)]
+    pub async fn load_texture(&mut self, path: &str) -> Result<(), macroquad::prelude::FileError> {
+        let texture = macroquad::prelude::load_texture(path).await?;
+        let name = Path::new(path)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("unknown")
+            .to_string();
+
+        self.textures.insert(name, texture);
+        Ok(())
+    }
+
+    #[allow(dead_code)]
+    pub async fn load_sound(&mut self, path: &str) -> Result<(), macroquad::prelude::FileError> {
+        let sound = macroquad::audio::load_sound(path).await?;
+        let name = Path::new(path)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("unknown")
+            .to_string();
+
+        self.sounds.insert(name, sound);
+        Ok(())
     }
 }

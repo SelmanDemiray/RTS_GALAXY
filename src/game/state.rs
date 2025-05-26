@@ -1,10 +1,11 @@
 use macroquad::prelude::*;
-use crate::resources::ResourceManager;
 use crate::entity::{Unit, Player, UnitType};
-use crate::game::modes::{GameMode, GameScreen};
-use crate::game::types::{ResourceType, Command};
+use crate::game::modes::GameMode;
+use crate::game::screens::GameScreen;
+use crate::game::types::ResourceType;
+use crate::game::commands::Command;
 use crate::game::resources::ResourceNode;
-use crate::network::NetworkMessage;
+use crate::network::NetworkMessage; // Fixed import
 
 pub struct GameState {
     pub units: Vec<Unit>,
@@ -19,7 +20,7 @@ pub struct GameState {
     pub map_width: f32,
     pub map_height: f32,
     pub players: Vec<Player>,
-    pub current_player_id: u8,
+    pub current_player_id: usize, // Change from u8 to usize
     pub resource_nodes: Vec<ResourceNode>,
     pub next_unit_id: u32,
     pub game_time: f32,
@@ -31,9 +32,11 @@ pub struct GameState {
     // Add new game settings fields
     pub sound_volume: f32,
     pub music_volume: f32,
+    #[allow(dead_code)] // Keep for future difficulty implementation
     pub game_difficulty: usize, // 0 = Easy, 1 = Normal, 2 = Hard
     pub sound_muted: bool,
     pub music_muted: bool,
+    pub should_quit: bool,
 }
 
 impl GameState {
@@ -46,52 +49,51 @@ impl GameState {
         
         // Create starting units
         let mut units = vec![
-            // Player headquarters
-            Unit::new(1, 100.0, 100.0, UnitType::Headquarters, 0),
-            // AI headquarters
-            Unit::new(2, 900.0, 700.0, UnitType::Headquarters, 1),
+            Unit::new(1, UnitType::Headquarters, 100.0, 100.0, 0),
+            // AI player headquarters
+            Unit::new(2, UnitType::Headquarters, 1500.0, 1200.0, 1),
         ];
         
-        // Add starting workers
-        units.push(Unit::new(3, 150.0, 100.0, UnitType::Worker, 0));
-        units.push(Unit::new(4, 170.0, 120.0, UnitType::Worker, 0));
-        units.push(Unit::new(5, 900.0, 730.0, UnitType::Worker, 1));
-        units.push(Unit::new(6, 870.0, 700.0, UnitType::Worker, 1));
+        // Add some initial workers
+        units.push(Unit::new(3, UnitType::Worker, 150.0, 100.0, 0));
+        units.push(Unit::new(4, UnitType::Worker, 170.0, 120.0, 0));
+        units.push(Unit::new(5, UnitType::Worker, 1500.0, 1230.0, 1));
+        units.push(Unit::new(6, UnitType::Worker, 1470.0, 1200.0, 1));
         
-        // Create resource nodes
+        // Create resource nodes - more scattered for infinite feeling
         let mut resource_nodes = vec![];
         
-        // Add mineral nodes
-        for i in 0..5 {
-            resource_nodes.push(ResourceNode {
-                x: 300.0 + i as f32 * 60.0,
-                y: 300.0,
-                resources: 1000,
-                resource_type: ResourceType::Minerals,
-                radius: 25.0,
-            });
+        // Generate resources in clusters across a larger area
+        for cluster in 0..10 {
+            let cluster_x = cluster as f32 * 400.0 + rand::gen_range(0.0, 200.0);
+            let cluster_y = cluster as f32 * 300.0 + rand::gen_range(0.0, 200.0);
             
+            // Add mineral nodes in cluster
+            for i in 0..3 {
+                resource_nodes.push(ResourceNode {
+                    x: cluster_x + i as f32 * 60.0 + rand::gen_range(-30.0, 30.0),
+                    y: cluster_y + rand::gen_range(-50.0, 50.0),
+                    resources: rand::gen_range(800, 1500),
+                    resource_type: ResourceType::Minerals,
+                    radius: 25.0,
+                });
+            }
+            
+            // Add energy nodes
             resource_nodes.push(ResourceNode {
-                x: 700.0 - i as f32 * 60.0,
-                y: 500.0,
-                resources: 1000,
-                resource_type: ResourceType::Minerals,
-                radius: 25.0,
-            });
-        }
-        
-        // Add energy nodes
-        for i in 0..3 {
-            resource_nodes.push(ResourceNode {
-                x: 500.0,
-                y: 200.0 + i as f32 * 70.0,
-                resources: 1000,
+                x: cluster_x + 100.0,
+                y: cluster_y + 80.0,
+                resources: rand::gen_range(600, 1200),
                 resource_type: ResourceType::Energy,
                 radius: 20.0,
             });
         }
 
-        // Create minimap rect - position it relative to screen size
+        // Much larger map for infinite feeling
+        let map_width = 5000.0;
+        let map_height = 4000.0;
+
+        // Create minimap rect
         let minimap_rect = Rect::new(
             screen_width() - 210.0, 
             screen_height() - 210.0, 
@@ -108,10 +110,10 @@ impl GameState {
             world_address: String::new(),
             camera_x: 0.0,
             camera_y: 0.0,
-            map_width: 1000.0,
-            map_height: 800.0,
+            map_width,
+            map_height,
             players,
-            current_player_id: 0,
+            current_player_id: 0, // Change from u8 to usize
             resource_nodes,
             next_unit_id: 7,
             game_time: 0.0,
@@ -119,12 +121,12 @@ impl GameState {
             current_command: None,
             selection_start: None,
             selection_end: None,
-            // Initialize new settings fields
             sound_volume: 0.6,
             music_volume: 0.4,
-            game_difficulty: 1, // Normal by default
+            game_difficulty: 1,
             sound_muted: false,
             music_muted: false,
+            should_quit: false,
         }
     }
     
@@ -132,25 +134,33 @@ impl GameState {
         // Update game time
         self.game_time += get_frame_time();
         
-        // Handle camera movement
+        // Dynamically generate more resources as we explore
+        self.generate_resources_if_needed();
+        
+        // Enhanced camera movement with faster speed
+        let camera_speed = 12.0;
         if is_key_down(KeyCode::W) || is_key_down(KeyCode::Up) {
-            self.camera_y -= 8.0;
+            self.camera_y -= camera_speed;
         }
         if is_key_down(KeyCode::S) || is_key_down(KeyCode::Down) {
-            self.camera_y += 8.0;
+            self.camera_y += camera_speed;
         }
         if is_key_down(KeyCode::A) || is_key_down(KeyCode::Left) {
-            self.camera_x -= 8.0;
+            self.camera_x -= camera_speed;
         }
         if is_key_down(KeyCode::D) || is_key_down(KeyCode::Right) {
-            self.camera_x += 8.0;
+            self.camera_x += camera_speed;
         }
         
-        // Safely clamp camera position
-        self.ensure_camera_in_bounds();
+        // Keep camera within reasonable bounds but allow exploration
+        self.camera_x = self.camera_x.clamp(-1000.0, self.map_width);
+        self.camera_y = self.camera_y.clamp(-1000.0, self.map_height);
         
         // Process unit movement and actions
         self.update_units();
+        
+        // Enhanced unit AI behavior
+        self.update_autonomous_behavior();
         
         // Handle box selection
         if is_mouse_button_pressed(MouseButton::Left) {
@@ -314,7 +324,7 @@ impl GameState {
             let unit_type = self.units[unit_idx].unit_type.clone();
             if unit_type == UnitType::Building || 
                unit_type == UnitType::Headquarters || 
-               self.units[unit_idx].health <= 0 {
+               self.units[unit_idx].health <= 0.0 {
                 continue;
             }
             
@@ -356,9 +366,9 @@ impl GameState {
                                 if let Some(capacity) = self.units[unit_idx].resource_capacity {
                                     if current_resources < capacity && node.resources > 0 {
                                         // Gather resources
-                                        let amount_to_gather = (capacity - current_resources).min(5).min(node.resources);
+                                        let amount_to_gather = (capacity - current_resources).min(5).min(node.resources as u32);
                                         self.units[unit_idx].current_resources = Some(current_resources + amount_to_gather);
-                                        node.resources -= amount_to_gather;
+                                        node.resources -= amount_to_gather as i32;
                                         
                                         // Once full, return to HQ
                                         if current_resources + amount_to_gather >= capacity {
@@ -405,7 +415,7 @@ impl GameState {
                                 
                                 // Update player resources
                                 if let Some(player) = self.players.get_mut(unit_player_id as usize) {
-                                    player.minerals += resources_to_deposit;
+                                    player.minerals += resources_to_deposit as i32;
                                 }
                                 break;
                             }
@@ -421,7 +431,7 @@ impl GameState {
                 
                 // Find nearest enemy
                 for (i, other_unit) in self.units.iter().enumerate() {
-                    if other_unit.player_id != unit_player_id && other_unit.health > 0 {
+                    if other_unit.player_id != unit_player_id && other_unit.health > 0.0 {
                         let dist = ((other_unit.x - unit_x).powi(2) + (other_unit.y - unit_y).powi(2)).sqrt();
                         if dist < attack_range && dist < nearest_enemy_dist {
                             nearest_enemy_dist = dist;
@@ -442,152 +452,42 @@ impl GameState {
         }
         
         // Remove dead units
-        self.units.retain(|unit| unit.health > 0);
+        let mut units_to_remove = Vec::new();
+        for (unit_idx, unit) in self.units.iter().enumerate() {
+            if unit.health <= 0.0 {
+                units_to_remove.push(unit_idx);
+            }
+        }
+        
+        for unit_idx in units_to_remove.iter().rev() {
+            self.units.remove(*unit_idx);
+        }
     }
     
-    pub fn draw(&self, _resource_manager: &ResourceManager) {
-        // Draw terrain background
-        draw_rectangle(0.0, 0.0, self.map_width, self.map_height, Color::new(0.1, 0.4, 0.1, 1.0));
-        
-        // Draw grid lines
-        let grid_size = 50.0;
-        let start_x = (self.camera_x / grid_size).floor() * grid_size;
-        let start_y = (self.camera_y / grid_size).floor() * grid_size;
-        
-        for x in (start_x as i32..=(self.camera_x + screen_width()) as i32).step_by(grid_size as usize) {
-            draw_line(
-                x as f32 - self.camera_x, 
-                0.0, 
-                x as f32 - self.camera_x, 
-                screen_height(),
-                1.0, 
-                Color::new(0.2, 0.5, 0.2, 0.5)
-            );
-        }
-        
-        for y in (start_y as i32..=(self.camera_y + screen_height()) as i32).step_by(grid_size as usize) {
-            draw_line(
-                0.0, 
-                y as f32 - self.camera_y, 
-                screen_width(),
-                y as f32 - self.camera_y, 
-                1.0, 
-                Color::new(0.2, 0.5, 0.2, 0.5)
-            );
-        }
-        
-        // Draw resource nodes
-        for node in &self.resource_nodes {
-            let color = match node.resource_type {
-                ResourceType::Minerals => Color::new(0.1, 0.1, 0.8, 1.0),
-                ResourceType::Energy => Color::new(0.9, 0.9, 0.1, 1.0),
-            };
-            
-            draw_circle(
-                node.x - self.camera_x, 
-                node.y - self.camera_y, 
-                node.radius, 
-                color
-            );
-            
-            // Draw resource amount
-            let text_size = 12.0;
-            let text = node.resources.to_string();
-            let text_size = measure_text(&text, None, text_size as u16, 1.0);
-            
-            draw_text(
-                &text,
-                node.x - self.camera_x - text_size.width / 2.0,
-                node.y - self.camera_y + text_size.height / 2.0,
-                text_size.height,
-                WHITE
-            );
-        }
-        
-        // Draw all game units
-        for unit in &self.units {
-            let base_color = self.players[unit.player_id as usize].color;
-            let is_selected = self.selected_units.contains(&unit.id);
-            let border_size = if is_selected { 2.0 } else { 0.0 };
-            
-            match unit.unit_type {
-                UnitType::Worker => {
-                    draw_circle_lines(
-                        unit.x - self.camera_x, 
-                        unit.y - self.camera_y, 
-                        12.0, 
-                        border_size, 
-                        GREEN
-                    );
-                    draw_circle(
-                        unit.x - self.camera_x, 
-                        unit.y - self.camera_y, 
-                        10.0, 
-                        base_color
-                    );
-                    
-                    // Draw resources being carried
-                    if let Some(resources) = unit.current_resources {
-                        if resources > 0 {
-                            draw_circle(
-                                unit.x - self.camera_x + 5.0, 
-                                unit.y - self.camera_y - 5.0, 
-                                5.0, 
-                                BLUE
-                            );
-                        }
-                    }
-                },
-                _ => {}
-            }
-            
-            // Draw health bar
-            let health_width = 20.0;
-            let health_height = 3.0;
-            let health_x = unit.x - self.camera_x - health_width / 2.0;
-            let health_y = unit.y - self.camera_y - 15.0;
-            
-            // Health bar background
-            draw_rectangle(
-                health_x,
-                health_y,
-                health_width,
-                health_height,
-                Color::new(0.3, 0.3, 0.3, 0.8)
-            );
-            
-            // Health bar fill
-            let health_ratio = unit.health as f32 / unit.max_health as f32;
-            draw_rectangle(
-                health_x,
-                health_y,
-                health_width * health_ratio,
-                health_height,
-                Color::new(0.1, 0.9, 0.1, 0.8)
-            );
-        }
-        
-        // Draw selection box if dragging
-        if let (Some(start), Some(end)) = (self.selection_start, self.selection_end) {
-            let x = (start.0 - self.camera_x).min(end.0 - self.camera_x);
-            let y = (start.1 - self.camera_y).min(end.1 - self.camera_y);
-            let width = (start.0 - end.0).abs();
-            let height = (start.1 - end.1).abs();
-            
-            draw_rectangle_lines(x, y, width, height, 1.0, GREEN);
-        }
+    pub fn draw(&self, resource_manager: &crate::resources::ResourceManager) {
+        // Use the enhanced rendering system
+        crate::game::rendering::draw_game(self, resource_manager);
     }
     
     pub fn handle_network_message(&mut self, msg: NetworkMessage) {
         match msg {
-            NetworkMessage::ChatMessage(text) => {
-                self.messages.push(text);
+            NetworkMessage::ChatMessage { player_id: _, message } => {
+                self.messages.push(message);
             },
-            NetworkMessage::GameState(new_units) => {
-                self.units = new_units;
+            NetworkMessage::GameState { units, timestamp: _ } => {
+                self.units = units;
             },
-            NetworkMessage::PlayerAction { .. } => {
-                // Handle remote player actions
+            NetworkMessage::UnitUpdate { unit_id, x, y } => {
+                if let Some(unit) = self.units.iter_mut().find(|u| u.id == unit_id) {
+                    unit.x = x;
+                    unit.y = y;
+                }
+            },
+            NetworkMessage::PlayerJoined { player_id: _, name } => {
+                self.messages.push(format!("{} joined the game", name));
+            },
+            NetworkMessage::PlayerLeft { player_id: _ } => {
+                self.messages.push("A player left the game".to_string());
             }
         }
     }
@@ -631,24 +531,20 @@ impl GameState {
         }
     }
 
+    #[allow(dead_code)] // Keep for future networking implementation
     pub fn set_game_mode(&mut self, mode: GameMode) {
         self.game_mode = mode;
-        
-        if mode == GameMode::Offline {
-            self.messages.push("Playing in offline mode.".to_string());
-        }
     }
 
-    pub fn spawn_unit(&mut self, unit_type: UnitType, x: f32, y: f32, player_id: u8) -> u32 {
+    pub fn spawn_unit(&mut self, unit_type: UnitType, x: f32, y: f32, player_id: usize) -> u32 {
         let id = self.next_unit_id;
         self.next_unit_id += 1;
-
-        self.units.push(Unit::new(id, x, y, unit_type, player_id));
+        self.units.push(Unit::new(id, unit_type, x, y, player_id as u8));
         id
     }
 
-    pub fn can_afford(&self, player_id: u8, unit_type: &UnitType) -> bool {
-        let player = &self.players[player_id as usize];
+    pub fn can_afford(&self, player_id: usize, unit_type: &UnitType) -> bool {
+        let player = &self.players[player_id];
         
         match unit_type {
             UnitType::Worker => player.minerals >= 50,
@@ -660,8 +556,8 @@ impl GameState {
         }
     }
 
-    pub fn deduct_cost(&mut self, player_id: u8, unit_type: &UnitType) {
-        let player = &mut self.players[player_id as usize];
+    pub fn deduct_cost(&mut self, player_id: usize, unit_type: &UnitType) {
+        let player = &mut self.players[player_id];
         
         match unit_type {
             UnitType::Worker => player.minerals -= 50,
@@ -721,5 +617,135 @@ impl GameState {
         } else {
             self.music_volume
         }
+    }
+
+    // New method for autonomous unit behavior
+    fn update_autonomous_behavior(&mut self) {
+        let _dt = get_frame_time(); // Added underscore to indicate intentional unused variable
+        
+        // Make units more autonomous
+        for i in 0..self.units.len() {
+            let unit_type = self.units[i].unit_type.clone();
+            let player_id = self.units[i].player_id;
+            let unit_x = self.units[i].x;
+            let unit_y = self.units[i].y;
+            
+            // Auto-assign tasks based on unit type and situation
+            match unit_type {
+                UnitType::Worker => {
+                    // If not carrying resources and no target, find resources
+                    if self.units[i].current_resources.unwrap_or(0) == 0 && 
+                       self.units[i].target_x.is_none() {
+                        if let Some((node_x, node_y)) = self.find_nearest_resource(unit_x, unit_y) {
+                            self.units[i].target_x = Some(node_x);
+                            self.units[i].target_y = Some(node_y);
+                        }
+                    }
+                },
+                UnitType::Fighter | UnitType::Ranger | UnitType::Tank => {
+                    // Auto-attack nearby enemies
+                    if self.units[i].target_x.is_none() {
+                        if let Some((enemy_x, enemy_y)) = self.find_nearest_enemy(unit_x, unit_y, player_id, 150.0) {
+                            self.units[i].target_x = Some(enemy_x);
+                            self.units[i].target_y = Some(enemy_y);
+                        } else {
+                            // Patrol behavior - move randomly around
+                            if rand::gen_range(0, 100) < 2 { // 2% chance per frame to get new patrol target
+                                let patrol_distance = 200.0;
+                                let new_x = unit_x + rand::gen_range(-patrol_distance, patrol_distance);
+                                let new_y = unit_y + rand::gen_range(-patrol_distance, patrol_distance);
+                                self.units[i].target_x = Some(new_x);
+                                self.units[i].target_y = Some(new_y);
+                            }
+                        }
+                    }
+                },
+                _ => {}
+            }
+        }
+    }
+    
+    // Helper method to find nearest resource
+    fn find_nearest_resource(&self, x: f32, y: f32) -> Option<(f32, f32)> {
+        let mut nearest_distance = f32::MAX;
+        let mut nearest_pos = None;
+        
+        for node in &self.resource_nodes {
+            if node.resources > 0 {
+                let distance = ((node.x - x).powi(2) + (node.y - y).powi(2)).sqrt();
+                if distance < nearest_distance {
+                    nearest_distance = distance;
+                    nearest_pos = Some((node.x, node.y));
+                }
+            }
+        }
+        
+        nearest_pos
+    }
+    
+    // Helper method to find nearest enemy
+    fn find_nearest_enemy(&self, x: f32, y: f32, player_id: usize, max_range: f32) -> Option<(f32, f32)> {
+        let mut nearest_distance = max_range;
+        let mut nearest_pos = None;
+        
+        for unit in &self.units {
+            if unit.player_id != player_id && unit.health > 0.0 {
+                let distance = ((unit.x - x).powi(2) + (unit.y - y).powi(2)).sqrt();
+                if distance < nearest_distance {
+                    nearest_distance = distance;
+                    nearest_pos = Some((unit.x, unit.y));
+                }
+            }
+        }
+        
+        nearest_pos
+    }
+    
+    // Generate more resources as map is explored
+    fn generate_resources_if_needed(&mut self) {
+        // Check if we need more resources in explored areas
+        let view_x = self.camera_x;
+        let view_y = self.camera_y;
+        let view_range = 1000.0;
+        
+        // Count resources in current view area
+        let resources_in_view = self.resource_nodes.iter()
+            .filter(|node| {
+                let dx = node.x - view_x;
+                let dy = node.y - view_y;
+                (dx * dx + dy * dy).sqrt() < view_range
+            })
+            .count();
+        
+        // If too few resources in view, generate more
+        if resources_in_view < 5 {
+            for _ in 0..3 {
+                let new_x = view_x + rand::gen_range(-view_range, view_range);
+                let new_y = view_y + rand::gen_range(-view_range, view_range);
+                
+                // Don't place too close to existing resources
+                let too_close = self.resource_nodes.iter().any(|node| {
+                    ((node.x - new_x).powi(2) + (node.y - new_y).powi(2)).sqrt() < 100.0
+                });
+                
+                if !too_close {
+                    self.resource_nodes.push(ResourceNode {
+                        x: new_x,
+                        y: new_y,
+                        resources: rand::gen_range(800, 1500),
+                        resource_type: if rand::gen_range(0, 100) < 30 { 
+                            ResourceType::Energy 
+                        } else { 
+                            ResourceType::Minerals 
+                        },
+                        radius: if rand::gen_range(0, 100) < 30 { 20.0 } else { 25.0 },
+                    });
+                }
+            }
+        }
+    }
+
+    pub fn request_quit(&mut self) {
+        self.should_quit = true;
     }
 }

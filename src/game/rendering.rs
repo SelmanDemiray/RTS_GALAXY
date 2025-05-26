@@ -1,413 +1,217 @@
 use macroquad::prelude::*;
 use crate::game::state::GameState;
-use crate::entity::{UnitType, ResourceType};
-use crate::resources::ResourceManager;
+use crate::resources::manager::ResourceManager;
+use crate::entity::UnitType;
+use crate::game::types::ResourceType;
 
-pub fn draw_game(game_state: &GameState, _resource_manager: &ResourceManager) {
-    // Draw terrain background
-    draw_rectangle(0.0, 0.0, game_state.map_width, game_state.map_height, Color::new(0.1, 0.4, 0.1, 1.0));
+pub fn draw_game(game_state: &GameState, resource_manager: &ResourceManager) {
+    // Clear and set camera offset
+    let camera_x = game_state.camera_x;
+    let camera_y = game_state.camera_y;
     
-    // Draw grid lines
-    let grid_size = 50.0;
-    let start_x = (game_state.camera_x / grid_size).floor() * grid_size;
-    let start_y = (game_state.camera_y / grid_size).floor() * grid_size;
-    
-    for x in (start_x as i32..=(game_state.camera_x + screen_width()) as i32).step_by(grid_size as usize) {
-        draw_line(
-            x as f32 - game_state.camera_x, 
-            0.0, 
-            x as f32 - game_state.camera_x, 
-            screen_height(),
-            1.0, 
-            Color::new(0.2, 0.5, 0.2, 0.5)
-        );
-    }
-    
-    for y in (start_y as i32..=(game_state.camera_y + screen_height()) as i32).step_by(grid_size as usize) {
-        draw_line(
-            0.0, 
-            y as f32 - game_state.camera_y, 
-            screen_width(),
-            y as f32 - game_state.camera_y, 
-            1.0, 
-            Color::new(0.2, 0.5, 0.2, 0.5)
-        );
-    }
+    // Draw background pattern
+    draw_background(camera_x, camera_y);
     
     // Draw resource nodes
     for node in &game_state.resource_nodes {
-        let color = match node.resource_type {
-            ResourceType::Minerals => Color::new(0.1, 0.1, 0.8, 1.0),
-            ResourceType::Energy => Color::new(0.9, 0.9, 0.1, 1.0),
-        };
-        
-        draw_circle(
-            node.x - game_state.camera_x, 
-            node.y - game_state.camera_y, 
-            node.radius, 
-            color
-        );
-        
-        // Draw resource amount
-        let text_size = 12.0;
-        let text = node.resources.to_string();
-        let text_size_measured = measure_text(&text, None, text_size as u16, 1.0);
-        
-        draw_text(
-            &text,
-            node.x - game_state.camera_x - text_size_measured.width / 2.0,
-            node.y - game_state.camera_y + text_size_measured.height / 2.0,
-            text_size,
-            WHITE
-        );
+        draw_resource_node(node, camera_x, camera_y, resource_manager);
     }
     
-    // Draw all game units
+    // Draw units
     for unit in &game_state.units {
-        let base_color = game_state.players[unit.player_id as usize].color;
-        let is_selected = game_state.selected_units.contains(&unit.id);
-        let border_size = if is_selected { 2.0 } else { 0.0 };
+        draw_unit(unit, camera_x, camera_y, resource_manager, game_state);
+    }
+    
+    // Draw selection boxes
+    draw_selection_indicators(game_state, camera_x, camera_y);
+    
+    // Draw UI elements
+    draw_ui_overlay(game_state, resource_manager);
+    
+    // Draw minimap
+    draw_minimap(game_state);
+}
+
+fn draw_background(camera_x: f32, camera_y: f32) {
+    // Draw a simple tiled background
+    let tile_size = 128.0;
+    let start_x = (camera_x / tile_size).floor() as i32;
+    let start_y = (camera_y / tile_size).floor() as i32;
+    let end_x = start_x + (screen_width() / tile_size).ceil() as i32 + 2;
+    let end_y = start_y + (screen_height() / tile_size).ceil() as i32 + 2;
+    
+    for x in start_x..end_x {
+        for y in start_y..end_y {
+            let world_x = x as f32 * tile_size - camera_x;
+            let world_y = y as f32 * tile_size - camera_y;
+            
+            // Alternate between two shades of green for a grass effect
+            let color = if (x + y) % 2 == 0 {
+                Color::new(0.2, 0.6, 0.2, 1.0)
+            } else {
+                Color::new(0.15, 0.5, 0.15, 1.0)
+            };
+            
+            draw_rectangle(world_x, world_y, tile_size, tile_size, color);
+        }
+    }
+}
+
+fn draw_resource_node(node: &crate::game::resources::ResourceNode, camera_x: f32, camera_y: f32, _resource_manager: &ResourceManager) {
+    let screen_x = node.x - camera_x;
+    let screen_y = node.y - camera_y;
+    
+    // Only draw if on screen
+    if screen_x > -50.0 && screen_x < screen_width() + 50.0 && 
+       screen_y > -50.0 && screen_y < screen_height() + 50.0 {
         
-        match unit.unit_type {
-            UnitType::Worker => {
-                draw_circle_lines(
-                    unit.x - game_state.camera_x, 
-                    unit.y - game_state.camera_y, 
-                    12.0, 
-                    border_size, 
-                    GREEN
-                );
-                draw_circle(
-                    unit.x - game_state.camera_x, 
-                    unit.y - game_state.camera_y, 
-                    10.0, 
-                    base_color
-                );
-                
-                // Draw resources being carried
-                if let Some(resources) = unit.current_resources {
-                    if resources > 0 {
-                        draw_circle(
-                            unit.x - game_state.camera_x + 5.0, 
-                            unit.y - game_state.camera_y - 5.0, 
-                            5.0, 
-                            BLUE
-                        );
-                    }
-                }
-            },
-            UnitType::Fighter => {
-                draw_circle_lines(
-                    unit.x - game_state.camera_x, 
-                    unit.y - game_state.camera_y, 
-                    12.0, 
-                    border_size, 
-                    GREEN
-                );
-                draw_rectangle(
-                    unit.x - game_state.camera_x - 8.0, 
-                    unit.y - game_state.camera_y - 8.0, 
-                    16.0, 
-                    16.0, 
-                    base_color
-                );
-            },
-            UnitType::Ranger => {
-                draw_circle_lines(
-                    unit.x - game_state.camera_x, 
-                    unit.y - game_state.camera_y, 
-                    12.0, 
-                    border_size, 
-                    GREEN
-                );
-                draw_triangle(
-                    Vec2::new(unit.x - game_state.camera_x, unit.y - game_state.camera_y - 10.0),
-                    Vec2::new(unit.x - game_state.camera_x - 8.0, unit.y - game_state.camera_y + 5.0),
-                    Vec2::new(unit.x - game_state.camera_x + 8.0, unit.y - game_state.camera_y + 5.0),
-                    base_color
-                );
-            },
-            UnitType::Tank => {
-                draw_circle_lines(
-                    unit.x - game_state.camera_x, 
-                    unit.y - game_state.camera_y, 
-                    15.0, 
-                    border_size, 
-                    GREEN
-                );
-                draw_rectangle(
-                    unit.x - game_state.camera_x - 12.0, 
-                    unit.y - game_state.camera_y - 8.0, 
-                    24.0, 
-                    16.0, 
-                    base_color
-                );
-                
-                // Draw tank turret
-                draw_circle(
-                    unit.x - game_state.camera_x, 
-                    unit.y - game_state.camera_y, 
-                    6.0, 
-                    Color::new(
-                        base_color.r * 0.8,
-                        base_color.g * 0.8,
-                        base_color.b * 0.8,
-                        1.0
-                    )
-                );
-            },
-            UnitType::Building => {
-                let building_size = 30.0;
-                
-                draw_rectangle_lines(
-                    unit.x - game_state.camera_x - building_size,
-                    unit.y - game_state.camera_y - building_size, 
-                    building_size * 2.0, 
-                    building_size * 2.0, 
-                    border_size,
-                    GREEN
-                );
-                
-                draw_rectangle(
-                    unit.x - game_state.camera_x - building_size, 
-                    unit.y - game_state.camera_y - building_size, 
-                    building_size * 2.0, 
-                    building_size * 2.0, 
-                    base_color
-                );
-                
-                // Draw construction progress if applicable
-                if let Some(progress) = unit.construction_progress {
-                    if progress < 100.0 {
-                        draw_rectangle(
-                            unit.x - game_state.camera_x - building_size,
-                            unit.y - game_state.camera_y - building_size - 10.0,
-                            (building_size * 2.0) * (progress / 100.0),
-                            5.0,
-                            GREEN
-                        );
-                    }
-                }
-            },
-            UnitType::Headquarters => {
-                let hq_size = 40.0;
-                
-                draw_rectangle_lines(
-                    unit.x - game_state.camera_x - hq_size,
-                    unit.y - game_state.camera_y - hq_size, 
-                    hq_size * 2.0, 
-                    hq_size * 2.0, 
-                    border_size,
-                    GREEN
-                );
-                
-                draw_rectangle(
-                    unit.x - game_state.camera_x - hq_size, 
-                    unit.y - game_state.camera_y - hq_size, 
-                    hq_size * 2.0, 
-                    hq_size * 2.0, 
-                    base_color
-                );
-                
-                // Draw an 'H' in the center
-                let h_text = "HQ";
-                let h_text_size = measure_text(h_text, None, 24, 1.0);
-                draw_text(
-                    h_text,
-                    unit.x - game_state.camera_x - h_text_size.width / 2.0,
-                    unit.y - game_state.camera_y + h_text_size.height / 2.0,
-                    24.0,
-                    WHITE
-                );
-            },
+        let color = match node.resource_type {
+            ResourceType::Minerals => BLUE,
+            ResourceType::Energy => YELLOW,
+        };
+        
+        // Draw resource node
+        draw_circle(screen_x, screen_y, node.radius, color);
+        
+        // Draw resource amount text
+        if node.resources > 0 {
+            let text = format!("{}", node.resources);
+            draw_text(&text, screen_x - 15.0, screen_y - 30.0, 16.0, WHITE);
+        }
+    }
+}
+
+fn draw_unit(unit: &crate::entity::Unit, camera_x: f32, camera_y: f32, _resource_manager: &ResourceManager, game_state: &GameState) {
+    let screen_x = unit.x - camera_x;
+    let screen_y = unit.y - camera_y;
+    
+    // Only draw if on screen
+    if screen_x > -50.0 && screen_x < screen_width() + 50.0 && 
+       screen_y > -50.0 && screen_y < screen_height() + 50.0 {
+        
+        // Choose color based on unit type and player
+        let base_color = if unit.player_id == game_state.current_player_id {
+            BLUE
+        } else {
+            RED
+        };
+        
+        let size = match unit.unit_type {
+            UnitType::Worker => 15.0,
+            UnitType::Fighter => 18.0,
+            UnitType::Ranger => 16.0,
+            UnitType::Tank => 25.0,
+            UnitType::Building => 40.0,
+            UnitType::Headquarters => 50.0,
+        };
+        
+        // Draw unit
+        draw_circle(screen_x, screen_y, size, base_color);
+        
+        // Draw health bar if unit is damaged
+        if unit.health < unit.max_health {
+            let bar_width = size * 2.0;
+            let bar_height = 4.0;
+            let health_ratio = unit.health as f32 / unit.max_health as f32;
+            
+            // Background
+            draw_rectangle(screen_x - bar_width/2.0, screen_y - size - 10.0, bar_width, bar_height, RED);
+            // Health
+            draw_rectangle(screen_x - bar_width/2.0, screen_y - size - 10.0, bar_width * health_ratio, bar_height, GREEN);
         }
         
-        // Draw health bar
-        let health_width = 20.0;
-        let health_height = 3.0;
-        let health_x = unit.x - game_state.camera_x - health_width / 2.0;
-        let health_y = unit.y - game_state.camera_y - 15.0;
-        
-        // Health bar background
-        draw_rectangle(
-            health_x,
-            health_y,
-            health_width,
-            health_height,
-            Color::new(0.3, 0.3, 0.3, 0.8)
-        );
-        
-        // Health bar fill
-        let health_ratio = unit.health as f32 / unit.max_health as f32;
-        draw_rectangle(
-            health_x,
-            health_y,
-            health_width * health_ratio,
-            health_height,
-            Color::new(0.1, 0.9, 0.1, 0.8)
-        );
+        // Draw resource carrying indicator for workers
+        if unit.unit_type == UnitType::Worker {
+            if let Some(resources) = unit.current_resources {
+                if resources > 0 {
+                    draw_circle(screen_x + 8.0, screen_y - 8.0, 4.0, GOLD);
+                    let text = format!("{}", resources);
+                    draw_text(&text, screen_x + 15.0, screen_y - 5.0, 12.0, WHITE);
+                }
+            }
+        }
+    }
+}
+
+fn draw_selection_indicators(game_state: &GameState, camera_x: f32, camera_y: f32) {
+    // Draw selection circles for selected units
+    for &unit_id in &game_state.selected_units {
+        if let Some(unit) = game_state.units.iter().find(|u| u.id == unit_id) {
+            let screen_x = unit.x - camera_x;
+            let screen_y = unit.y - camera_y;
+            
+            let size = match unit.unit_type {
+                UnitType::Worker => 20.0,
+                UnitType::Fighter => 23.0,
+                UnitType::Ranger => 21.0,
+                UnitType::Tank => 30.0,
+                UnitType::Building => 45.0,
+                UnitType::Headquarters => 55.0,
+            };
+            
+            // Draw selection circle
+            draw_circle_lines(screen_x, screen_y, size, 2.0, GREEN);
+        }
     }
     
     // Draw selection box if dragging
     if let (Some(start), Some(end)) = (game_state.selection_start, game_state.selection_end) {
-        let x = (start.0 - game_state.camera_x).min(end.0 - game_state.camera_x);
-        let y = (start.1 - game_state.camera_y).min(end.1 - game_state.camera_y);
-        let width = (start.0 - end.0).abs();
-        let height = (start.1 - end.1).abs();
+        let start_screen_x = start.0 - camera_x;
+        let start_screen_y = start.1 - camera_y;
+        let end_screen_x = end.0 - camera_x;
+        let end_screen_y = end.1 - camera_y;
         
-        draw_rectangle_lines(x, y, width, height, 1.0, GREEN);
+        let rect_x = start_screen_x.min(end_screen_x);
+        let rect_y = start_screen_y.min(end_screen_y);
+        let rect_w = (start_screen_x - end_screen_x).abs();
+        let rect_h = (start_screen_y - end_screen_y).abs();
+        
+        draw_rectangle_lines(rect_x, rect_y, rect_w, rect_h, 2.0, GREEN);
     }
+}
+
+fn draw_ui_overlay(game_state: &GameState, _resource_manager: &ResourceManager) {
+    // Draw resource counter
+    let player = &game_state.players[game_state.current_player_id as usize];
+    let resources_text = format!("Minerals: {} | Energy: {}", player.minerals, player.energy);
+    draw_text(&resources_text, 10.0, 30.0, 24.0, WHITE);
     
-    // Draw minimap
-    draw_rectangle(
-        game_state.minimap_rect.x,
-        game_state.minimap_rect.y,
-        game_state.minimap_rect.w,
-        game_state.minimap_rect.h,
-        Color::new(0.0, 0.0, 0.0, 0.7)
-    );
+    // Draw selected unit info
+    if !game_state.selected_units.is_empty() {
+        let info_text = format!("Selected: {} units", game_state.selected_units.len());
+        draw_text(&info_text, 10.0, 60.0, 20.0, WHITE);
+    }
+}
+
+fn draw_minimap(game_state: &GameState) {
+    let minimap = &game_state.minimap_rect;
     
-    draw_rectangle_lines(
-        game_state.minimap_rect.x,
-        game_state.minimap_rect.y,
-        game_state.minimap_rect.w,
-        game_state.minimap_rect.h,
-        1.0,
-        Color::new(0.8, 0.8, 0.8, 0.5)
-    );
+    // Draw minimap background
+    draw_rectangle(minimap.x, minimap.y, minimap.w, minimap.h, Color::new(0.0, 0.0, 0.0, 0.7));
+    draw_rectangle_lines(minimap.x, minimap.y, minimap.w, minimap.h, 2.0, WHITE);
     
     // Draw units on minimap
-    let map_ratio_x = game_state.minimap_rect.w / game_state.map_width;
-    let map_ratio_y = game_state.minimap_rect.h / game_state.map_height;
+    let scale_x = minimap.w / game_state.map_width;
+    let scale_y = minimap.h / game_state.map_height;
     
     for unit in &game_state.units {
-        let minimap_x = game_state.minimap_rect.x + unit.x * map_ratio_x;
-        let minimap_y = game_state.minimap_rect.y + unit.y * map_ratio_y;
-        let minimap_size = 2.0;
+        let minimap_x = minimap.x + unit.x * scale_x;
+        let minimap_y = minimap.y + unit.y * scale_y;
         
-        draw_rectangle(
-            minimap_x - minimap_size / 2.0,
-            minimap_y - minimap_size / 2.0,
-            minimap_size,
-            minimap_size,
-            game_state.players[unit.player_id as usize].color
-        );
+        let color = if unit.player_id == game_state.current_player_id {
+            BLUE
+        } else {
+            RED
+        };
+        
+        draw_circle(minimap_x, minimap_y, 2.0, color);
     }
     
-    // Draw camera viewport on minimap
-    let viewport_x = game_state.minimap_rect.x + game_state.camera_x * map_ratio_x;
-    let viewport_y = game_state.minimap_rect.y + game_state.camera_y * map_ratio_y;
-    let viewport_w = screen_width() * map_ratio_x;
-    let viewport_h = screen_height() * map_ratio_y;
+    // Draw camera view on minimap
+    let view_x = minimap.x + game_state.camera_x * scale_x;
+    let view_y = minimap.y + game_state.camera_y * scale_y;
+    let view_w = screen_width() * scale_x;
+    let view_h = screen_height() * scale_y;
     
-    draw_rectangle_lines(
-        viewport_x,
-        viewport_y,
-        viewport_w,
-        viewport_h,
-        1.0,
-        WHITE
-    );
-    
-    // Draw resources display
-    let player = &game_state.players[game_state.current_player_id as usize];
-    draw_text(
-        &format!("Minerals: {}", player.minerals),
-        10.0,
-        30.0,
-        20.0,
-        WHITE
-    );
-    
-    draw_text(
-        &format!("Energy: {}", player.energy),
-        10.0,
-        55.0,
-        20.0,
-        Color::new(1.0, 1.0, 0.0, 1.0)
-    );
-    
-    // Draw selected unit commands
-    if !game_state.selected_units.is_empty() {
-        let mut y_pos = 100.0;
-        
-        // Show different commands based on selected unit types
-        let mut has_workers = false;
-        let mut has_buildings = false;
-        let mut has_combat_units = false;
-        
-        for &unit_id in &game_state.selected_units {
-            if let Some(unit) = game_state.units.iter().find(|u| u.id == unit_id) {
-                match unit.unit_type {
-                    UnitType::Worker => has_workers = true,
-                    UnitType::Building | UnitType::Headquarters => has_buildings = true,
-                    _ => has_combat_units = true,
-                }
-            }
-        }
-        
-        // Display command info based on current selection
-        if has_workers || has_combat_units || has_buildings {
-            draw_text(
-                "Commands:",
-                10.0,
-                y_pos,
-                18.0,
-                WHITE
-            );
-            y_pos += 25.0;
-            
-            if has_workers {
-                draw_text(
-                    "G - Gather resources",
-                    15.0,
-                    y_pos,
-                    16.0,
-                    WHITE
-                );
-                y_pos += 20.0;
-                
-                draw_text(
-                    "B - Build structure",
-                    15.0,
-                    y_pos,
-                    16.0,
-                    WHITE
-                );
-                y_pos += 20.0;
-            }
-            
-            if has_combat_units || has_workers {
-                draw_text(
-                    "A - Attack",
-                    15.0,
-                    y_pos,
-                    16.0,
-                    WHITE
-                );
-                y_pos += 20.0;
-                
-                draw_text(
-                    "M - Move",
-                    15.0,
-                    y_pos,
-                    16.0,
-                    WHITE
-                );
-                if has_buildings && y_pos > 0.0 {
-                    y_pos += 20.0;
-                }
-            }
-            
-            if has_buildings {
-                draw_text(
-                    "T - Train units",
-                    15.0,
-                    y_pos,
-                    16.0,
-                    WHITE
-                );
-            }
-        }
-    }
+    draw_rectangle_lines(view_x, view_y, view_w, view_h, 1.0, WHITE);
 }

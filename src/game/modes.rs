@@ -1,13 +1,10 @@
-#[derive(Clone, Debug, PartialEq, Copy)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum GameMode {
     Offline,
     Online,
 }
 
-#[derive(Clone, Debug, PartialEq, Copy)]
-pub enum GameScreen {
-    MainMenu,
-    Playing,
-    Settings,
-    Credits,
-}
+// Re-export GameScreen from screens module
+pub use super::screens::GameScreen;

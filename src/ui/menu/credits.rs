@@ -2,7 +2,7 @@ use macroquad::prelude::*;
 use crate::game::GameState;
 use super::system::MenuSystem;
 
-pub fn draw(_menu: &MenuSystem, _game_state: &mut GameState) {
+pub fn draw(_menu: &MenuSystem, _game_state: &GameState) {
     let screen_center_x = screen_width() / 2.0;
     
     draw_text(

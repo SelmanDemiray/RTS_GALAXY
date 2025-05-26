@@ -7,9 +7,10 @@ mod resources;
 mod audio;
 
 use macroquad::prelude::*;
-use crate::game::{GameMode, GameScreen, GameState};
+use crate::game::{GameMode, GameState};
+use crate::game::screens::GameScreen;
 use crate::ai::AIController;
-use crate::ui::menu::MenuSystem;
+use crate::ui::menu::system::MenuSystem;
 use crate::resources::ResourceManager;
 use crate::network::NetworkClient;
 use crate::audio::AudioManager;
@@ -26,8 +27,8 @@ async fn main() {
     
     // Load game resources
     resource_manager.load_resources().await;
-    // resource_manager.load_texture("assets/terrain.png").await;
-    // resource_manager.load_texture("assets/units.png").await;
+    
+    // Initialize menu system only after resources are loaded
     menu_system.initialize(&resource_manager);
     
     // Start at main menu
@@ -67,10 +68,15 @@ async fn main() {
         next_frame().await;
     }
     
-    // Start background music once loaded
-    audio_manager.play_music("main_theme", &resource_manager, &game_state);
+    // Don't try to start background music if it doesn't exist
+    // audio_manager.play_music("main_theme", &resource_manager, &game_state);
     
     loop {
+        // Check if game should quit
+        if game_state.should_quit {
+            break;
+        }
+        
         // Wrap the frame processing in a catch_unwind to prevent crashes
         let result = panic::catch_unwind(AssertUnwindSafe(|| {
             // Check for screen resize
@@ -95,7 +101,11 @@ async fn main() {
             match game_state.current_screen {
                 GameScreen::MainMenu | GameScreen::Settings | GameScreen::Credits => {
                     menu_system.update(&mut game_state, &resource_manager, &mut audio_manager);
-                    menu_system.draw(&mut game_state, &resource_manager);
+                    menu_system.draw(&game_state, &resource_manager); // Fixed: removed &mut
+                },
+                GameScreen::Quit => {
+                    // This will be handled by the quit check at the start of the loop
+                    game_state.request_quit();
                 },
                 GameScreen::Playing => {
                     // Play game music if different from menu music

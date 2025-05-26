@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum BuildingType {
     Headquarters,
     Barracks,
@@ -8,4 +8,6 @@ pub enum BuildingType {
     ResearchCenter,
     TurretDefense,
     ResourceCollector,
+    ResourceDepot,
+    DefenseTurret,
 }

@@ -1,11 +1,11 @@
 pub mod state;
-mod modes;
+pub mod modes;
+pub mod screens;
 pub mod types;
-mod resources;
+pub mod commands;
+pub mod resources;
+pub mod rendering;
 
+// Re-export commonly used types
 pub use state::GameState;
 pub use modes::{GameMode, GameScreen};
-pub use types::{ResourceType};
-
-pub use crate::entity::UnitType;
-pub use crate::entity::BuildingType;

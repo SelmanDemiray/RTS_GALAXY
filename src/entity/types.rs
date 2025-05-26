@@ -18,4 +18,6 @@ pub enum BuildingType {
     ResearchCenter,
     TurretDefense,
     ResourceCollector,
+    ResourceDepot, // Added missing variant referenced in AI behaviors
+    DefenseTurret, // Added missing variant referenced in AI behaviors
 }

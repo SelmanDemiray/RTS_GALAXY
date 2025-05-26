@@ -1,4 +1,5 @@
-use crate::game::{GameState, UnitType, BuildingType};
+use crate::game::state::GameState;
+use crate::entity::{UnitType, BuildingType};
 use super::behaviors;
 
 pub struct AIController {
