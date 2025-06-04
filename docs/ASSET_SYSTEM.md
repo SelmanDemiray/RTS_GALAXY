@@ -1,27 +1,63 @@
-# Asset System Documentation
+# RTS Galaxy Asset System Documentation
 
-## Overview
+The RTS Galaxy asset system is designed to handle complex 3D models, animations, textures, and audio assets efficiently across all zoom levels from individual units to cosmic structures.
 
-The Galaxy RTS asset system is designed for modular, efficient loading and management of 3D models, animations, textures, sounds, and fonts. The system supports individual animation files, manifest-driven configuration, and runtime optimization.
+## Asset Organization Philosophy
 
-## Core Components
+### Modular Animation System
+Each unit and building has its own folder containing:
+- **Main Model**: The base 3D model file (e.g., `worker.glb`)
+- **Animation Folder**: Individual animation files in separate `.glb` files
+- **Texture Assets**: Organized by resolution and purpose
 
-### ResourceManager
-The `ResourceManager` is the central hub for all asset operations:
+### Benefits of Separation
+1. **Independent Updates**: Modify animations without affecting base models
+2. **Memory Efficiency**: Load only needed animations for current game state
+3. **Version Control**: Track changes to individual components
+4. **Collaboration**: Multiple artists can work on different animations
+5. **Performance**: Stream assets based on zoom level and visibility
 
-```rust
-// Loading assets
-let mut resource_manager = ResourceManager::new();
-resource_manager.load_resources().await;
+## Directory Structure
 
-// Accessing assets
-let worker_model = resource_manager.get_model("worker");
-let click_sound = resource_manager.get_sound("button_click");
-let ui_texture = resource_manager.get_texture("button_normal");
+```
+assets/
+├── models/
+│   ├── units/
+│   │   └── [unit_name]/
+│   │       ├── [unit_name].glb              # Base model
+│   │       └── animations/
+│   │           ├── idle.glb                 # Animation files
+│   │           ├── walking.glb
+│   │           └── ...
+│   ├── buildings/
+│   │   └── [building_name]/
+│   │       ├── [building_name].glb          # Base model
+│   │       └── animations/
+│   │           ├── idle.glb
+│   │           ├── construction.glb
+│   │           └── ...
+│   ├── resources/
+│   ├── effects/
+│   └── terrain/
+├── textures/
+│   ├── ui/
+│   │   ├── buttons/
+│   │   ├── panels/
+│   │   └── icons/
+│   └── environment/
+├── sounds/
+│   ├── units/
+│   ├── buildings/
+│   ├── ui/
+│   └── game/
+├── music/
+└── fonts/
 ```
 
-### Asset Manifest System
-All assets are defined in `assets/asset_manifest.json`:
+## Asset Manifest System
+
+### Manifest Structure
+The `asset_manifest.json` file defines all assets and their properties:
 
 ```json
 {
@@ -47,276 +83,388 @@ All assets are defined in `assets/asset_manifest.json`:
 }
 ```
 
-## Animation System
+### Animation Metadata
+Each animation entry contains:
+- **name**: Unique identifier for the animation
+- **file**: Path to the animation .glb file
+- **duration**: Length of animation in seconds
+- **loop**: Whether animation should repeat
+- **speed**: Playback speed multiplier
 
-### Individual Animation Files
-Each animation is stored as a separate `.glb` file:
+## 3D Model Specifications
 
-```
-worker/
-├── worker.glb              # Base model
-└── animations/
-    ├── idle.glb           # Individual animations
-    ├── walking.glb
-    ├── gathering_minerals.glb
-    └── building.glb
-```
+### Technical Requirements
 
-### Benefits
-1. **Modularity**: Update animations independently
-2. **Memory Efficiency**: Load only needed animations
-3. **Version Control**: Track individual animation changes
-4. **Artist Workflow**: Multiple artists can work simultaneously
+#### File Format
+- **Primary Format**: glTF Binary (.glb)
+- **Fallback**: glTF (.gltf) with external assets
+- **Creation Tool**: Blender 2.8+ recommended
 
-### Animation Loading
+#### Polygon Limits
 ```rust
-// Check if animation exists
-if model.has_animation("walking") {
-    // Play animation
-    model.draw_with_animation(
-        position,
-        rotation,
-        scale,
-        "walking",
-        animation_time
-    );
+pub enum ModelComplexity {
+    Simple,    // 100-500 triangles   (distant view)
+    Medium,    // 500-2000 triangles  (normal view)
+    Detailed,  // 2000-8000 triangles (close view)
+    HighDetail,// 8000+ triangles     (cinematic)
 }
 ```
 
-## Asset Categories
+#### Texture Specifications
+- **Resolution**: 1024×1024 for main models, 512×512 for details
+- **Format**: PNG or JPG embedded in glTF
+- **Maps Required**:
+  - Diffuse (base color)
+  - Normal (surface detail)
+  - Metallic-Roughness (material properties)
+  - Emissive (self-illumination, optional)
 
-### 3D Models
-- **Units**: Character models with complete animation sets
-- **Buildings**: Structures with construction and operational animations
-- **Resources**: Harvestable resource nodes with ambient animations
-- **Effects**: Visual effects like explosions and particles
+#### Model Origins and Scale
+- **Units**: Origin at base/feet, 1 Blender unit = 1 meter
+- **Buildings**: Origin at foundation center
+- **Effects**: Origin at effect center
+- **Human Scale Reference**: Worker ~1.8 meters tall
 
-### Textures
-- **UI Elements**: Buttons, panels, icons organized by function
-- **Materials**: PBR textures for 3D models
-- **Effects**: Particle and special effect textures
+### Level-of-Detail (LOD) System
 
-### Audio
-- **Sound Effects**: Categorized by usage (UI, units, buildings, game)
-- **Music**: Background tracks for different game states
-- **Voice**: Unit acknowledgments and narrator audio
-
-### Fonts
-- **UI Fonts**: Interface text rendering
-- **Title Fonts**: Large display text
-- **Special Fonts**: Decorative or thematic typography
-
-## File Organization
-
-### Directory Structure
-```
-assets/
-├── models/
-│   ├── units/
-│   │   ├── worker/
-│   │   │   ├── worker.glb
-│   │   │   └── animations/
-│   │   │       ├── idle.glb
-│   │   │       ├── walking.glb
-│   │   │       └── ...
-│   │   └── ...
-│   ├── buildings/
-│   ├── resources/
-│   └── effects/
-├── textures/
-│   └── ui/
-│       ├── buttons/
-│       ├── panels/
-│       └── ...
-├── sounds/
-│   ├── units/
-│   ├── buildings/
-│   ├── ui/
-│   └── game/
-├── music/
-├── fonts/
-└── asset_manifest.json
-```
-
-### Naming Conventions
-- **Files**: lowercase with underscores (`worker_idle.glb`)
-- **Assets**: descriptive names matching usage (`button_click`)
-- **Directories**: singular nouns (`model/`, `texture/`)
-
-## Model Requirements
-
-### Technical Specifications
-- **Format**: glTF Binary (.glb) format only
-- **Polygon Count**:
-  - Units: 500-2000 triangles
-  - Buildings: 1000-5000 triangles
-  - Effects: 200-1000 triangles
-- **Textures**: 1024×1024 max, embedded in glTF
-- **Scale**: 1 Blender unit = 1 game meter
-- **Origin**: Centered at base for units and buildings
-
-### Animation Requirements
-- **Frame Rate**: 30fps for all animations
-- **Duration**: As specified in manifest
-- **Looping**: Seamless loops where appropriate
-- **Naming**: Match manifest animation names exactly
-
-## Integration with Game Systems
-
-### Rendering Pipeline
+#### Automatic LOD Selection
 ```rust
-// In game rendering loop
-for unit in &game_state.units {
-    if let Some(model) = resource_manager.get_model(&unit.model_name) {
-        let animation_name = unit.get_current_animation();
-        model.draw_with_animation(
-            unit.position,
-            unit.rotation,
-            unit.scale,
-            animation_name,
-            unit.animation_time
-        );
+impl Model3D {
+    pub fn get_appropriate_lod(&self, distance: f32, zoom_level: i32) -> ModelLOD {
+        match (distance, zoom_level) {
+            (d, z) if d < 50.0 && z <= 5 => ModelLOD::High,
+            (d, z) if d < 200.0 && z <= 15 => ModelLOD::Medium,
+            (d, z) if d < 1000.0 && z <= 30 => ModelLOD::Low,
+            _ => ModelLOD::Icon,
+        }
     }
 }
 ```
 
-### Audio Integration
-```rust
-// Playing context-aware audio
-audio_manager.play_selection_sound(&resource_manager, &game_state);
-audio_manager.play_music("battle_theme", &resource_manager, &game_state);
-```
+#### LOD Variants
+Each major model can have multiple detail levels:
+- `model_high.glb` - Full detail for close viewing
+- `model_medium.glb` - Simplified for tactical view
+- `model_low.glb` - Basic shape for strategic view
+- `model_icon.glb` - Simple representation for cosmic view
 
-### UI Textures
+## Animation System
+
+### Animation Categories
+
+#### Unit Animations
+
+##### Movement Animations
+- **idle**: Default standing/hovering pose
+- **walking**: Normal speed movement
+- **running**: Fast movement for combat units
+- **turning**: Rotation animations for large units
+
+##### Work Animations
+- **gathering_minerals**: Mining and collection
+- **gathering_energy**: Energy harvesting
+- **building**: Construction work
+- **carrying_resources**: Moving with cargo
+
+##### Combat Animations
+- **attacking**: Varies by unit type:
+  - `melee_attack` for fighters
+  - `shooting` for rangers
+  - `firing_cannon` for tanks
+- **blocking**: Defensive poses
+- **dying**: Death sequences
+- **victory_pose**: Celebration animations
+
+##### Special Animations
+- **reloading**: Weapon maintenance
+- **special_ability**: Unique unit abilities
+- **damaged_idle**: Wounded state animations
+
+#### Building Animations
+
+##### Construction Phases
+- **foundation**: Initial building placement
+- **framework**: Structural assembly
+- **completion**: Finishing details
+- **operational**: Normal working state
+
+##### Operational Animations
+- **idle**: Normal functioning state
+- **working**: Active production/operation
+- **power_up**: Activation sequences
+- **power_down**: Deactivation sequences
+
+##### Production Animations
+- **training**: Unit production in barracks
+- **manufacturing**: Vehicle assembly
+- **research**: Technology development
+- **resource_processing**: Material refinement
+
+##### Combat Animations (Defense Buildings)
+- **scanning**: Target acquisition
+- **targeting**: Weapon aiming
+- **firing**: Weapon discharge
+- **reloading**: Ammunition replacement
+- **turret_rotate**: Weapon positioning
+
+##### Damage States
+- **damaged**: Partially destroyed appearance
+- **critical**: Severely damaged state
+- **destroyed**: Final destruction sequence
+- **repair**: Restoration animations
+
+### Animation Implementation
+
+#### Animation State Machine
 ```rust
-// Accessing UI textures
-if let Some(button_texture) = resource_manager.get_texture("button_normal") {
-    draw_texture(button_texture, x, y, WHITE);
+#[derive(Debug, Clone, PartialEq)]
+pub enum UnitAnimationState {
+    Idle,
+    Walking,
+    Running,
+    Attacking,
+    Gathering,
+    Building,
+    Dying,
+    Special,
+}
+
+pub struct UnitAnimation {
+    pub current_state: UnitAnimationState,
+    pub animation_time: f32,
+    pub animation_speed: f32,
+    pub loop_animation: bool,
+    pub transition_time: f32,
+    pub next_state: Option<UnitAnimationState>,
 }
 ```
 
-## Performance Optimization
+#### Animation Blending
+```rust
+impl UnitAnimation {
+    pub fn blend_to_state(&mut self, new_state: UnitAnimationState, blend_time: f32) {
+        self.next_state = Some(new_state);
+        self.transition_time = blend_time;
+    }
+    
+    pub fn update(&mut self, dt: f32) {
+        if let Some(next_state) = &self.next_state {
+            self.transition_time -= dt;
+            if self.transition_time <= 0.0 {
+                self.current_state = next_state.clone();
+                self.next_state = None;
+                self.animation_time = 0.0;
+            }
+        }
+        
+        self.animation_time += dt * self.animation_speed;
+    }
+}
+```
 
-### Loading Strategy
-- **Async Loading**: Non-blocking asset loading during initialization
-- **Priority Loading**: Critical assets loaded first
-- **Lazy Loading**: Optional assets loaded on demand
-- **Memory Management**: Automatic cleanup of unused assets
+## Resource Management System
 
-### Runtime Optimization
-- **Animation Caching**: Frequently used animations kept in memory
-- **Level-of-Detail**: Different models for different zoom levels
-- **Culling**: Only render visible objects
-- **Batching**: Group similar draw calls
+### Asset Loading Strategy
+
+#### Lazy Loading
+```rust
+pub struct ResourceManager {
+    loaded_models: HashMap<String, Model3D>,
+    loading_queue: VecDeque<AssetRequest>,
+    cache_size_limit: usize,
+    current_cache_size: usize,
+}
+
+impl ResourceManager {
+    pub async fn load_asset_async(&mut self, asset_name: &str) -> Result<(), LoadError> {
+        if !self.loaded_models.contains_key(asset_name) {
+            let model = self.load_model_from_file(asset_name).await?;
+            self.cache_model(asset_name.to_string(), model);
+        }
+        Ok(())
+    }
+}
+```
+
+#### Streaming System
+- **Predictive Loading**: Load assets before they're needed
+- **Distance-Based**: Load higher detail as camera approaches
+- **Zoom-Based**: Load appropriate detail level for current zoom
+- **Memory Management**: Unload distant or unused assets
+
+#### Cache Management
+```rust
+pub enum CacheStrategy {
+    LRU,           // Least Recently Used
+    Distance,      // Based on distance from camera
+    Importance,    // Based on asset importance
+    Frequency,     // Based on usage frequency
+}
+```
+
+### Memory Optimization
+
+#### Asset Compression
+- **Texture Compression**: DXT/BC compression for GPU efficiency
+- **Mesh Compression**: Quantized vertex data
+- **Animation Compression**: Keyframe reduction
+
+#### Instancing System
+```rust
+pub struct InstancedModel {
+    pub base_model: Model3D,
+    pub instances: Vec<ModelInstance>,
+    pub instance_buffer: Buffer,
+}
+
+pub struct ModelInstance {
+    pub transform: Mat4,
+    pub color_tint: Vec4,
+    pub animation_frame: f32,
+}
+```
+
+## Audio Asset System
+
+### Audio Categories
+
+#### Sound Effects
+```rust
+pub struct SoundInfo {
+    pub name: String,
+    pub file: String,
+    pub volume: f32,
+    pub pitch_variation: f32,
+    pub spatial: bool,  // 3D positioned sound
+}
+```
+
+#### Music System
+```rust
+pub struct MusicTrack {
+    pub name: String,
+    pub file: String,
+    pub loop_start: f32,
+    pub loop_end: f32,
+    pub fade_in_time: f32,
+    pub fade_out_time: f32,
+}
+```
+
+#### Dynamic Audio
+- **Adaptive Music**: Changes based on game state
+- **3D Spatial Audio**: Positioned sounds in game world
+- **Environmental Effects**: Reverb and echo based on location
+
+### Audio Loading and Playback
+
+#### Streaming Audio
+```rust
+pub struct AudioManager {
+    sound_cache: HashMap<String, Sound>,
+    music_player: MusicPlayer,
+    spatial_mixer: SpatialAudioMixer,
+}
+
+impl AudioManager {
+    pub fn play_3d_sound(&mut self, sound_name: &str, position: Vec3, volume: f32) {
+        if let Some(sound) = self.sound_cache.get(sound_name) {
+            self.spatial_mixer.play_at_position(sound, position, volume);
+        }
+    }
+}
+```
+
+## UI Asset Management
+
+### Texture Organization
+```
+textures/ui/
+├── buttons/
+│   ├── button_normal.png
+│   ├── button_hover.png
+│   └── button_pressed.png
+├── panels/
+│   ├── panel_background.png
+│   └── panel_frame.png
+├── icons/
+│   ├── unit_icons/
+│   ├── building_icons/
+│   └── resource_icons/
+└── hud/
+    ├── minimap_frame.png
+    ├── health_bar.png
+    └── selection_circle.png
+```
+
+### Scalable UI Assets
+```rust
+pub struct UITexture {
+    pub texture: Texture2D,
+    pub nine_patch: Option<NinePatch>,
+    pub scaling_mode: ScalingMode,
+}
+
+pub enum ScalingMode {
+    Stretch,
+    NinePatch,
+    Tile,
+    KeepAspect,
+}
+```
+
+## Performance Considerations
+
+### Loading Performance
+- **Async Loading**: Non-blocking asset loading
+- **Progressive Loading**: Load base models first, details later
+- **Batch Loading**: Load related assets together
+
+### Runtime Performance
+- **Asset Pooling**: Reuse common assets
+- **GPU Memory Management**: Efficient texture and mesh uploading
+- **Culling Systems**: Don't process invisible assets
+
+### Platform Optimization
+- **Mobile Considerations**: Lower resolution assets for mobile devices
+- **Console Optimization**: Platform-specific asset formats
+- **PC Flexibility**: Configurable quality settings
 
 ## Development Workflow
 
-### Adding New Assets
+### Asset Creation Pipeline
+1. **Concept Art**: Design and style guides
+2. **3D Modeling**: Create base models in Blender
+3. **Animation**: Create individual animation files
+4. **Texturing**: Create and optimize textures
+5. **Export**: Export to glTF format
+6. **Integration**: Add to asset manifest
+7. **Testing**: Verify in-game appearance and performance
 
-1. **Create Asset Files**:
-   ```bash
-   # Place model files
-   assets/models/units/new_unit/new_unit.glb
-   assets/models/units/new_unit/animations/idle.glb
-   ```
+### Version Control
+- **Asset Versioning**: Track changes to individual assets
+- **Manifest Updates**: Version the asset manifest file
+- **Backwards Compatibility**: Handle asset format changes
 
-2. **Update Manifest**:
-   ```json
-   {
-     "name": "new_unit",
-     "file": "models/units/new_unit/new_unit.glb",
-     "animations": [
-       {
-         "name": "idle",
-         "file": "models/units/new_unit/animations/idle.glb",
-         "duration": 2.0,
-         "loop": true
-       }
-     ]
-   }
-   ```
-
-3. **Reference in Code**:
-   ```rust
-   let model = resource_manager.get_model("new_unit");
-   ```
-
-### Asset Hot-Reloading (Development)
-```rust
-// Enable hot-reloading in debug builds
-#[cfg(debug_assertions)]
-resource_manager.enable_hot_reload();
-```
-
-### Asset Validation
-```bash
-# Validate asset manifest
-cargo run --bin validate_assets
-
-# Check for missing files
-cargo run --bin check_assets
-```
-
-## Troubleshooting
-
-### Common Issues
-
-**Model not loading:**
-- Check file path in manifest
-- Verify .glb file format
-- Ensure file permissions are correct
-
-**Animation not playing:**
-- Verify animation name matches manifest
-- Check animation duration and loop settings
-- Ensure animation file exists
-
-**Texture not displaying:**
-- Check texture format (PNG/JPG)
-- Verify texture is embedded in glTF
-- Check UV mapping in 3D software
-
-**Audio not playing:**
-- Verify audio file format (.ogg/.wav)
-- Check audio file path in manifest
-- Ensure system audio is working
-
-### Performance Issues
-
-**Slow loading:**
-- Reduce texture sizes
-- Optimize polygon counts
-- Use compressed audio formats
-
-**High memory usage:**
-- Enable asset cleanup
-- Reduce number of loaded animations
-- Use texture streaming
-
-### Asset Creation Guidelines
-
-**For Artists:**
-- Use Blender 2.8+ for model creation
-- Export with embedded textures
-- Test models in game before finalizing
-- Follow naming conventions strictly
-
-**For Developers:**
-- Update manifest for all new assets
-- Test asset loading in development builds
-- Validate file formats before committing
-- Document any new asset requirements
+### Quality Assurance
+- **Automated Testing**: Verify asset loading and display
+- **Performance Testing**: Check memory usage and frame rates
+- **Visual Validation**: Ensure assets display correctly
 
 ## Future Enhancements
 
 ### Planned Features
-- **Asset Streaming**: Dynamic loading based on game area
-- **Compression**: Advanced compression for smaller file sizes
-- **Procedural Assets**: Runtime generation of certain assets
-- **Asset Bundles**: Grouped loading for related assets
+1. **Procedural Assets**: Generate detail on-demand
+2. **AI-Enhanced LOD**: Machine learning for optimal detail levels
+3. **Real-time Asset Streaming**: Stream assets from cloud
+4. **User-Generated Content**: Tools for community asset creation
 
-### Optimization Goals
-- **Faster Loading**: Parallel loading of multiple assets
-- **Lower Memory**: More efficient memory management
-- **Better Quality**: Higher resolution assets with LOD systems
-- **Cross-Platform**: Optimized assets for different platforms
+### Technical Improvements
+1. **Advanced Compression**: Better compression algorithms
+2. **GPU-Accelerated Loading**: Use GPU for asset processing
+3. **Predictive Caching**: AI-driven asset pre-loading
+4. **Cross-Platform Assets**: Unified assets across all platforms
+
+---
+
+*The RTS Galaxy asset system provides the foundation for rich, detailed 3D content that scales seamlessly from intimate unit details to vast cosmic structures.*

@@ -9,3 +9,6 @@ pub mod credits;
 pub mod system;
 
 pub use system::MenuSystem;
+pub use main_menu::draw_main_menu;
+pub use settings::draw_settings;
+pub use credits::draw_credits;

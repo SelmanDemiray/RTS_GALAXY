@@ -1,155 +1,191 @@
 use macroquad::prelude::*;
-use crate::game::{GameState, GameScreen};
+use crate::game::state::GameState;
 use crate::audio::AudioManager;
-use crate::resources::ResourceManager;
+use crate::resources::manager::ResourceManager;
 use super::system::MenuSystem;
 
-pub fn draw(menu: &MenuSystem, game_state: &GameState) {
-    let screen_width = screen_width();
-    let screen_height = screen_height();
+pub struct SettingsMenu {
+    selected_option: usize,
+    options: Vec<SettingsOption>,
+}
+
+#[derive(Clone)]
+pub enum SettingsOption {
+    SoundVolume,
+    MusicVolume,
+    ToggleSound,
+    ToggleMusic,
+    Back,
+}
+
+impl SettingsMenu {
+    pub fn new() -> Self {
+        Self {
+            selected_option: 0,
+            options: vec![
+                SettingsOption::SoundVolume,
+                SettingsOption::MusicVolume,
+                SettingsOption::ToggleSound,
+                SettingsOption::ToggleMusic,
+                SettingsOption::Back,
+            ],
+        }
+    }
     
-    clear_background(Color::new(0.1, 0.1, 0.15, 1.0));
+    pub fn update(&mut self) {
+        if is_key_pressed(KeyCode::Up) {
+            self.selected_option = if self.selected_option > 0 {
+                self.selected_option - 1
+            } else {
+                self.options.len() - 1
+            };
+        }
+        
+        if is_key_pressed(KeyCode::Down) {
+            self.selected_option = (self.selected_option + 1) % self.options.len();
+        }
+    }
     
-    // Draw title
-    let title = "Settings";
-    let title_size = menu.get_title_font_size();
-    let title_width = measure_text(title, None, title_size as u16, 1.0).width;
-    draw_text(
-        title,
-        (screen_width - title_width) / 2.0,
-        menu.get_title_y(),
-        menu.get_title_font_size(),
-        GOLD
-    );
+    pub fn handle_input(&mut self, game_state: &mut GameState) -> bool {
+        if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+            match &self.options[self.selected_option] {
+                SettingsOption::ToggleSound => {
+                    game_state.sound_muted = !game_state.sound_muted;
+                },
+                SettingsOption::ToggleMusic => {
+                    game_state.music_muted = !game_state.music_muted;
+                },
+                SettingsOption::Back => {
+                    return true; // Signal to go back
+                },
+                _ => {}
+            }
+        }
+        
+        // Volume adjustment
+        if is_key_down(KeyCode::Left) || is_key_down(KeyCode::Right) {
+            let increment = if is_key_down(KeyCode::Right) { 0.05 } else { -0.05 };
+            
+            match &self.options[self.selected_option] {
+                SettingsOption::SoundVolume => {
+                    game_state.sound_volume = (game_state.sound_volume + increment).clamp(0.0, 1.0);
+                },
+                SettingsOption::MusicVolume => {
+                    game_state.music_volume = (game_state.music_volume + increment).clamp(0.0, 1.0);
+                },
+                _ => {}
+            }
+        }
+        
+        false
+    }
     
-    // Draw volume controls
-    let y_start = screen_height * 0.4;
-    let line_height = 40.0;
-    
-    // Sound Volume
-    let sound_text = format!("Sound Volume: {:.0}%", game_state.sound_volume * 100.0);
-    draw_text(&sound_text, 100.0, y_start, 24.0, WHITE);
-    
-    // Music Volume  
-    let music_text = format!("Music Volume: {:.0}%", game_state.music_volume * 100.0);
-    draw_text(&music_text, 100.0, y_start + line_height, 24.0, WHITE);
-    
-    // Mute toggles
-    let sound_mute_text = format!("Sound Muted: {}", if game_state.sound_muted { "Yes" } else { "No" });
-    draw_text(&sound_mute_text, 100.0, y_start + line_height * 2.0, 24.0, WHITE);
-    
-    let music_mute_text = format!("Music Muted: {}", if game_state.music_muted { "Yes" } else { "No" });
-    draw_text(&music_mute_text, 100.0, y_start + line_height * 3.0, 24.0, WHITE);
-    
-    // Back button
-    let back_button_y = screen_height * 0.8;
-    menu.draw_button("Back", back_button_y, GameScreen::MainMenu, game_state);
-    
-    // Instructions
-    draw_text("Press ESC to return to main menu", 100.0, screen_height * 0.9, 20.0, GRAY);
+    pub fn draw(&self, game_state: &GameState) {
+        let center_x = screen_width() / 2.0;
+        let center_y = screen_height() / 2.0;
+        
+        // Background
+        draw_rectangle(0.0, 0.0, screen_width(), screen_height(), 
+                      Color::new(0.0, 0.0, 0.1, 0.8));
+        
+        // Title
+        let title = "SETTINGS";
+        let title_size = 48.0;
+        let title_width = measure_text(title, None, title_size as u16, 1.0).width;
+        draw_text(title, center_x - title_width / 2.0, center_y - 150.0, title_size, WHITE);
+        
+        // Options
+        let option_spacing = 60.0;
+        let start_y = center_y - 50.0;
+        
+        for (i, option) in self.options.iter().enumerate() {
+            let y = start_y + i as f32 * option_spacing;
+            let is_selected = i == self.selected_option;
+            
+            let color = if is_selected { YELLOW } else { WHITE };
+            let size = if is_selected { 24.0 } else { 20.0 };
+            
+            match option {
+                SettingsOption::SoundVolume => {
+                    let text = format!("Sound Volume: {}%", (game_state.sound_volume * 100.0) as i32);
+                    let text_width = measure_text(&text, None, size as u16, 1.0).width;
+                    draw_text(&text, center_x - text_width / 2.0, y, size, color);
+                    
+                    if is_selected {
+                        draw_text("← →", center_x + text_width / 2.0 + 20.0, y, 16.0, LIGHTGRAY);
+                    }
+                },
+                SettingsOption::MusicVolume => {
+                    let text = format!("Music Volume: {}%", (game_state.music_volume * 100.0) as i32);
+                    let text_width = measure_text(&text, None, size as u16, 1.0).width;
+                    draw_text(&text, center_x - text_width / 2.0, y, size, color);
+                    
+                    if is_selected {
+                        draw_text("← →", center_x + text_width / 2.0 + 20.0, y, 16.0, LIGHTGRAY);
+                    }
+                },
+                SettingsOption::ToggleSound => {
+                    let status = if game_state.sound_muted { "OFF" } else { "ON" };
+                    let text = format!("Sound Effects: {}", status);
+                    let text_width = measure_text(&text, None, size as u16, 1.0).width;
+                    draw_text(&text, center_x - text_width / 2.0, y, size, color);
+                },
+                SettingsOption::ToggleMusic => {
+                    let status = if game_state.music_muted { "OFF" } else { "ON" };
+                    let text = format!("Music: {}", status);
+                    let text_width = measure_text(&text, None, size as u16, 1.0).width;
+                    draw_text(&text, center_x - text_width / 2.0, y, size, color);
+                },
+                SettingsOption::Back => {
+                    let text = "Back to Main Menu";
+                    let text_width = measure_text(text, None, size as u16, 1.0).width;
+                    draw_text(text, center_x - text_width / 2.0, y, size, color);
+                },
+            }
+            
+            // Selection indicator
+            if is_selected {
+                let indicator_x = center_x - 200.0;
+                draw_triangle(
+                    Vec2::new(indicator_x, y - 5.0),
+                    Vec2::new(indicator_x, y + 5.0),
+                    Vec2::new(indicator_x + 10.0, y),
+                    YELLOW
+                );
+            }
+        }
+        
+        // Instructions
+        let instructions = vec![
+            "Use arrow keys to navigate",
+            "Enter to select",
+            "← → to adjust volumes",
+            "ESC to go back",
+        ];
+        
+        let instructions_y = center_y + 200.0;
+        for (i, instruction) in instructions.iter().enumerate() {
+            let text_width = measure_text(instruction, None, 14, 1.0).width;
+            draw_text(instruction, center_x - text_width / 2.0, 
+                     instructions_y + i as f32 * 20.0, 14.0, GRAY);
+        }
+    }
 }
 
 pub fn draw_settings(
     menu_system: &mut MenuSystem,
     game_state: &mut GameState,
-    audio_manager: &AudioManager,
-    resource_manager: &ResourceManager
+    _audio_manager: &AudioManager,
+    _resource_manager: &ResourceManager
 ) {
-    let center_x = screen_width() / 2.0;
-    let center_y = screen_height() / 2.0;
+    // Create settings menu if it doesn't exist
+    let mut settings_menu = SettingsMenu::new();
     
-    // Draw title
-    let title = "SETTINGS";
-    let title_size = 36.0;
-    let title_dims = measure_text(title, None, title_size as u16, 1.0);
-    draw_text(title, center_x - title_dims.width / 2.0, center_y - 200.0, title_size, WHITE);
+    settings_menu.update();
     
-    let (mouse_x, mouse_y) = mouse_position();
-    
-    // Sound volume slider
-    draw_text("Sound Volume:", center_x - 150.0, center_y - 100.0, 24.0, WHITE);
-    let sound_slider_x = center_x - 100.0;
-    let sound_slider_y = center_y - 70.0;
-    let slider_width = 200.0;
-    let slider_height = 20.0;
-    
-    // Draw slider background
-    draw_rectangle(sound_slider_x, sound_slider_y, slider_width, slider_height, DARKGRAY);
-    
-    // Draw slider fill
-    let sound_fill_width = slider_width * game_state.sound_volume;
-    draw_rectangle(sound_slider_x, sound_slider_y, sound_fill_width, slider_height, BLUE);
-    
-    // Handle sound slider interaction
-    if is_mouse_button_down(MouseButton::Left) &&
-       mouse_x >= sound_slider_x && mouse_x <= sound_slider_x + slider_width &&
-       mouse_y >= sound_slider_y && mouse_y <= sound_slider_y + slider_height {
-        game_state.sound_volume = ((mouse_x - sound_slider_x) / slider_width).clamp(0.0, 1.0);
+    if settings_menu.handle_input(game_state) || is_key_pressed(KeyCode::Escape) {
+        game_state.current_screen = crate::game::screens::GameScreen::MainMenu;
     }
     
-    // Music volume slider
-    draw_text("Music Volume:", center_x - 150.0, center_y - 20.0, 24.0, WHITE);
-    let music_slider_x = center_x - 100.0;
-    let music_slider_y = center_y + 10.0;
-    
-    // Draw slider background
-    draw_rectangle(music_slider_x, music_slider_y, slider_width, slider_height, DARKGRAY);
-    
-    // Draw slider fill
-    let music_fill_width = slider_width * game_state.music_volume;
-    draw_rectangle(music_slider_x, music_slider_y, music_fill_width, slider_height, BLUE);
-    
-    // Handle music slider interaction
-    if is_mouse_button_down(MouseButton::Left) &&
-       mouse_x >= music_slider_x && mouse_x <= music_slider_x + slider_width &&
-       mouse_y >= music_slider_y && mouse_y <= music_slider_y + slider_height {
-        game_state.music_volume = ((mouse_x - music_slider_x) / slider_width).clamp(0.0, 1.0);
-    }
-    
-    // Mute checkboxes
-    let checkbox_size = 20.0;
-    
-    // Sound mute checkbox
-    let sound_checkbox_x = center_x + 120.0;
-    let sound_checkbox_y = sound_slider_y;
-    draw_rectangle(sound_checkbox_x, sound_checkbox_y, checkbox_size, checkbox_size, WHITE);
-    if game_state.sound_muted {
-        draw_rectangle(sound_checkbox_x + 2.0, sound_checkbox_y + 2.0, checkbox_size - 4.0, checkbox_size - 4.0, RED);
-    }
-    draw_text("Mute", sound_checkbox_x + 30.0, sound_checkbox_y + 15.0, 16.0, WHITE);
-    
-    // Handle sound mute click
-    if is_mouse_button_pressed(MouseButton::Left) &&
-       mouse_x >= sound_checkbox_x && mouse_x <= sound_checkbox_x + checkbox_size &&
-       mouse_y >= sound_checkbox_y && mouse_y <= sound_checkbox_y + checkbox_size {
-        game_state.sound_muted = !game_state.sound_muted;
-        audio_manager.play_ui_click(resource_manager, game_state);
-    }
-    
-    // Music mute checkbox
-    let music_checkbox_x = center_x + 120.0;
-    let music_checkbox_y = music_slider_y;
-    draw_rectangle(music_checkbox_x, music_checkbox_y, checkbox_size, checkbox_size, WHITE);
-    if game_state.music_muted {
-        draw_rectangle(music_checkbox_x + 2.0, music_checkbox_y + 2.0, checkbox_size - 4.0, checkbox_size - 4.0, RED);
-    }
-    draw_text("Mute", music_checkbox_x + 30.0, music_checkbox_y + 15.0, 16.0, WHITE);
-    
-    // Handle music mute click
-    if is_mouse_button_pressed(MouseButton::Left) &&
-       mouse_x >= music_checkbox_x && mouse_x <= music_checkbox_x + checkbox_size &&
-       mouse_y >= music_checkbox_y && mouse_y <= music_checkbox_y + checkbox_size {
-        game_state.music_muted = !game_state.music_muted;
-        audio_manager.play_ui_click(resource_manager, game_state);
-    }
-    
-    // Back button
-    let button_width = 150.0;
-    let button_height = 40.0;
-    let back_y = center_y + 150.0;
-    let back_hovered = menu_system.is_point_in_rect(mouse_x, mouse_y, center_x - button_width / 2.0, back_y, button_width, button_height);
-    if menu_system.draw_button(center_x - button_width / 2.0, back_y, button_width, button_height, "BACK", back_hovered) {
-        game_state.current_screen = GameScreen::MainMenu;
-        audio_manager.play_ui_click(resource_manager, game_state);
-    }
+    settings_menu.draw(game_state);
 }

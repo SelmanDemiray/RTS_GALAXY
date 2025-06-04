@@ -1,13 +1,17 @@
 pub mod state;
-pub mod modes;
-pub mod screens;
-pub mod types;
-pub mod commands;
-pub mod resources;
+pub mod zoom;
 pub mod rendering;
-pub mod zoom; // Add zoom module
+pub mod screens;
+pub mod commands;
+pub mod modes;
+pub mod types;
+pub mod resources;
 
-// Re-export commonly used types
 pub use state::GameState;
-pub use modes::{GameMode, GameScreen};
 pub use zoom::ZoomSystem;
+pub use screens::GameScreen;
+pub use types::*;
+
+// Re-export commonly used items
+pub use state::GameState;
+pub use screens::GameScreen;

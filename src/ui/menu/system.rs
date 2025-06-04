@@ -2,17 +2,17 @@ use macroquad::prelude::*;
 use crate::game::{GameState, GameScreen};
 use crate::audio::AudioManager;
 use crate::resources::ResourceManager;
+use super::main_menu::MainMenu;
 
+#[derive(Clone)]
 pub struct MenuSystem {
-    pub selected_button: i32,
-    pub button_hover_time: f32,
+    pub main_menu: Option<MainMenu>,
 }
 
 impl MenuSystem {
     pub fn new() -> Self {
         Self {
-            selected_button: 0,
-            button_hover_time: 0.0,
+            main_menu: None,
         }
     }
     

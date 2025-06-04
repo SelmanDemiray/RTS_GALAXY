@@ -44,9 +44,14 @@ pub struct Unit {
     pub current_resources: Option<u32>, // Alias for carried_resources
     pub max_carry_capacity: u32,
     pub resource_capacity: Option<u32>, // Alias for max_carry_capacity
-    // Add building-related fields
     pub building_type: Option<BuildingType>,
     pub construction_progress: Option<f32>,
+    pub facing_direction: f32,
+    pub is_moving: bool,
+    pub is_attacking: bool,
+    pub is_gathering: bool,
+    pub is_building: bool,
+    pub animation: crate::entity::UnitAnimation,
 }
 
 impl Unit {
@@ -85,8 +90,33 @@ impl Unit {
             resource_capacity: Some(max_carry_capacity), // Alias
             building_type: None,
             construction_progress: None,
+            facing_direction: 0.0,
+            is_moving: false,
+            is_attacking: false,
+            is_gathering: false,
+            is_building: false,
+            animation: crate::entity::UnitAnimation::new(),
         }
     }
 
-    // ...existing methods...
+    pub fn update_animation_state(&mut self) {
+        if self.health <= 0.0 {
+            self.animation.set_state(crate::entity::UnitAnimationState::Dying, false);
+        } else if self.is_attacking && self.current_cooldown > 0.0 {
+            self.animation.set_state(crate::entity::UnitAnimationState::Attacking, false);
+        } else if self.is_gathering {
+            self.animation.set_state(crate::entity::UnitAnimationState::Gathering, true);
+        } else if self.is_building {
+            self.animation.set_state(crate::entity::UnitAnimationState::Building, true);
+        } else if self.is_moving {
+            let anim_state = if self.speed > 80.0 {
+                crate::entity::UnitAnimationState::Running
+            } else {
+                crate::entity::UnitAnimationState::Walking
+            };
+            self.animation.set_state(anim_state, true);
+        } else {
+            self.animation.set_state(crate::entity::UnitAnimationState::Idle, true);
+        }
+    }
 }
