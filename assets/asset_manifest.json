@@ -3,418 +3,200 @@
     "units": [
       {
         "name": "worker", 
-        "file": "models/units/worker.glb", 
+        "file": "models/units/worker/worker.glb", 
         "scale": 1.0,
         "default_animation": "idle",
         "animations": [
-          {"name": "idle", "duration": 2.0, "loop": true, "speed": 1.0},
-          {"name": "walking", "duration": 1.0, "loop": true, "speed": 1.0},
-          {"name": "gathering_minerals", "duration": 1.5, "loop": true, "speed": 1.0},
-          {"name": "gathering_energy", "duration": 1.5, "loop": true, "speed": 1.0},
-          {"name": "building", "duration": 2.0, "loop": true, "speed": 1.0},
-          {"name": "carrying_resources", "duration": 1.2, "loop": true, "speed": 1.0},
-          {"name": "dying", "duration": 1.2, "loop": false, "speed": 1.0}
+          {"name": "idle", "file": "models/units/worker/animations/idle.glb", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "walking", "file": "models/units/worker/animations/walking.glb", "duration": 1.0, "loop": true, "speed": 1.0},
+          {"name": "gathering_minerals", "file": "models/units/worker/animations/gathering_minerals.glb", "duration": 1.5, "loop": true, "speed": 1.0},
+          {"name": "gathering_energy", "file": "models/units/worker/animations/gathering_energy.glb", "duration": 1.5, "loop": true, "speed": 1.0},
+          {"name": "building", "file": "models/units/worker/animations/building.glb", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "carrying_resources", "file": "models/units/worker/animations/carrying_resources.glb", "duration": 1.2, "loop": true, "speed": 1.0},
+          {"name": "dying", "file": "models/units/worker/animations/dying.glb", "duration": 1.2, "loop": false, "speed": 1.0}
         ]
       },
       {
         "name": "fighter", 
-        "file": "models/units/fighter.glb", 
+        "file": "models/units/fighter/fighter.glb", 
         "scale": 1.0,
         "default_animation": "idle",
         "animations": [
-          {"name": "idle", "duration": 2.0, "loop": true, "speed": 1.0},
-          {"name": "walking", "duration": 1.0, "loop": true, "speed": 1.0},
-          {"name": "running", "duration": 0.8, "loop": true, "speed": 1.2},
-          {"name": "melee_attack", "duration": 0.6, "loop": false, "speed": 1.5},
-          {"name": "blocking", "duration": 1.0, "loop": true, "speed": 1.0},
-          {"name": "victory_pose", "duration": 2.0, "loop": false, "speed": 1.0},
-          {"name": "dying", "duration": 1.2, "loop": false, "speed": 1.0}
+          {"name": "idle", "file": "models/units/fighter/animations/idle.glb", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "walking", "file": "models/units/fighter/animations/walking.glb", "duration": 1.0, "loop": true, "speed": 1.0},
+          {"name": "running", "file": "models/units/fighter/animations/running.glb", "duration": 0.8, "loop": true, "speed": 1.2},
+          {"name": "melee_attack", "file": "models/units/fighter/animations/melee_attack.glb", "duration": 0.6, "loop": false, "speed": 1.5},
+          {"name": "blocking", "file": "models/units/fighter/animations/blocking.glb", "duration": 1.0, "loop": true, "speed": 1.0},
+          {"name": "victory_pose", "file": "models/units/fighter/animations/victory_pose.glb", "duration": 2.0, "loop": false, "speed": 1.0},
+          {"name": "dying", "file": "models/units/fighter/animations/dying.glb", "duration": 1.2, "loop": false, "speed": 1.0}
         ]
       },
       {
         "name": "ranger", 
-        "file": "models/units/ranger.glb", 
+        "file": "models/units/ranger/ranger.glb", 
         "scale": 1.0,
         "default_animation": "idle",
         "animations": [
-          {"name": "idle", "duration": 2.0, "loop": true, "speed": 1.0},
-          {"name": "walking", "duration": 1.0, "loop": true, "speed": 1.0},
-          {"name": "running", "duration": 0.8, "loop": true, "speed": 1.2},
-          {"name": "aiming", "duration": 0.5, "loop": true, "speed": 1.0},
-          {"name": "shooting", "duration": 0.4, "loop": false, "speed": 1.5},
-          {"name": "reloading", "duration": 1.0, "loop": false, "speed": 1.0},
-          {"name": "dying", "duration": 1.2, "loop": false, "speed": 1.0}
+          {"name": "idle", "file": "models/units/ranger/animations/idle.glb", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "walking", "file": "models/units/ranger/animations/walking.glb", "duration": 1.0, "loop": true, "speed": 1.0},
+          {"name": "running", "file": "models/units/ranger/animations/running.glb", "duration": 0.8, "loop": true, "speed": 1.2},
+          {"name": "aiming", "file": "models/units/ranger/animations/aiming.glb", "duration": 0.5, "loop": true, "speed": 1.0},
+          {"name": "shooting", "file": "models/units/ranger/animations/shooting.glb", "duration": 0.4, "loop": false, "speed": 1.5},
+          {"name": "reloading", "file": "models/units/ranger/animations/reloading.glb", "duration": 1.0, "loop": false, "speed": 1.0},
+          {"name": "dying", "file": "models/units/ranger/animations/dying.glb", "duration": 1.2, "loop": false, "speed": 1.0}
         ]
       },
       {
         "name": "tank", 
-        "file": "models/units/tank.glb", 
+        "file": "models/units/tank/tank.glb", 
         "scale": 1.2,
         "default_animation": "idle",
         "animations": [
-          {"name": "idle", "duration": 3.0, "loop": true, "speed": 0.8},
-          {"name": "walking", "duration": 1.5, "loop": true, "speed": 0.8},
-          {"name": "turret_rotate", "duration": 2.0, "loop": true, "speed": 1.0},
-          {"name": "firing_cannon", "duration": 1.0, "loop": false, "speed": 1.0},
-          {"name": "damaged_idle", "duration": 3.0, "loop": true, "speed": 0.6},
-          {"name": "dying", "duration": 2.0, "loop": false, "speed": 0.8}
+          {"name": "idle", "file": "models/units/tank/animations/idle.glb", "duration": 3.0, "loop": true, "speed": 0.8},
+          {"name": "walking", "file": "models/units/tank/animations/walking.glb", "duration": 1.5, "loop": true, "speed": 0.8},
+          {"name": "turret_rotate", "file": "models/units/tank/animations/turret_rotate.glb", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "firing_cannon", "file": "models/units/tank/animations/firing_cannon.glb", "duration": 1.0, "loop": false, "speed": 1.0},
+          {"name": "damaged_idle", "file": "models/units/tank/animations/damaged_idle.glb", "duration": 3.0, "loop": true, "speed": 0.6},
+          {"name": "dying", "file": "models/units/tank/animations/dying.glb", "duration": 2.0, "loop": false, "speed": 0.8}
         ]
       }
     ],
     "buildings": [
       {
         "name": "headquarters", 
-        "file": "models/buildings/headquarters.glb", 
+        "file": "models/buildings/headquarters/headquarters.glb", 
         "scale": 2.5,
         "default_animation": "idle",
         "animations": [
-          {"name": "idle", "duration": 6.0, "loop": true, "speed": 0.8},
-          {"name": "construction", "duration": 3.0, "loop": true, "speed": 1.0},
-          {"name": "command_active", "duration": 4.0, "loop": true, "speed": 1.2},
-          {"name": "communication", "duration": 2.5, "loop": true, "speed": 1.5},
-          {"name": "emergency_mode", "duration": 1.5, "loop": true, "speed": 2.0},
-          {"name": "shield_up", "duration": 3.0, "loop": true, "speed": 1.0},
-          {"name": "damaged", "duration": 2.0, "loop": true, "speed": 0.6},
-          {"name": "destroyed", "duration": 3.0, "loop": false, "speed": 1.0}
-        ]
-      },
-      {
-        "name": "command_center", 
-        "file": "models/buildings/command_center.glb", 
-        "scale": 2.2,
-        "default_animation": "idle",
-        "animations": [
-          {"name": "idle", "duration": 5.0, "loop": true, "speed": 0.9},
-          {"name": "construction", "duration": 2.5, "loop": true, "speed": 1.0},
-          {"name": "command_active", "duration": 3.5, "loop": true, "speed": 1.1},
-          {"name": "communication", "duration": 2.0, "loop": true, "speed": 1.3},
-          {"name": "emergency_mode", "duration": 1.2, "loop": true, "speed": 2.2},
-          {"name": "damaged", "duration": 2.0, "loop": true, "speed": 0.7},
-          {"name": "destroyed", "duration": 2.5, "loop": false, "speed": 1.0}
-        ]
-      },
-      {
-        "name": "control_tower", 
-        "file": "models/buildings/control_tower.glb", 
-        "scale": 1.8,
-        "default_animation": "idle",
-        "animations": [
-          {"name": "idle", "duration": 4.0, "loop": true, "speed": 1.0},
-          {"name": "construction", "duration": 2.0, "loop": true, "speed": 1.0},
-          {"name": "communication", "duration": 1.8, "loop": true, "speed": 1.4},
-          {"name": "scanning", "duration": 3.0, "loop": true, "speed": 0.8},
-          {"name": "damaged", "duration": 1.8, "loop": true, "speed": 0.8},
-          {"name": "destroyed", "duration": 2.0, "loop": false, "speed": 1.0}
+          {"name": "idle", "file": "models/buildings/headquarters/animations/idle.glb", "duration": 6.0, "loop": true, "speed": 0.8},
+          {"name": "construction", "file": "models/buildings/headquarters/animations/construction.glb", "duration": 3.0, "loop": true, "speed": 1.0},
+          {"name": "command_active", "file": "models/buildings/headquarters/animations/command_active.glb", "duration": 4.0, "loop": true, "speed": 1.2},
+          {"name": "communication", "file": "models/buildings/headquarters/animations/communication.glb", "duration": 2.5, "loop": true, "speed": 1.5},
+          {"name": "emergency_mode", "file": "models/buildings/headquarters/animations/emergency_mode.glb", "duration": 1.5, "loop": true, "speed": 2.0},
+          {"name": "shield_up", "file": "models/buildings/headquarters/animations/shield_up.glb", "duration": 3.0, "loop": true, "speed": 1.0},
+          {"name": "damaged", "file": "models/buildings/headquarters/animations/damaged.glb", "duration": 2.0, "loop": true, "speed": 0.6},
+          {"name": "destroyed", "file": "models/buildings/headquarters/animations/destroyed.glb", "duration": 3.0, "loop": false, "speed": 1.0}
         ]
       },
       {
         "name": "barracks", 
-        "file": "models/buildings/barracks.glb", 
+        "file": "models/buildings/barracks/barracks.glb", 
         "scale": 2.0,
         "default_animation": "idle",
         "animations": [
-          {"name": "idle", "duration": 4.0, "loop": true, "speed": 0.9},
-          {"name": "construction", "duration": 2.5, "loop": true, "speed": 1.0},
-          {"name": "training", "duration": 3.0, "loop": true, "speed": 1.2},
-          {"name": "deployment", "duration": 2.0, "loop": false, "speed": 1.5},
-          {"name": "drill_mode", "duration": 4.5, "loop": true, "speed": 1.0},
-          {"name": "damaged", "duration": 2.2, "loop": true, "speed": 0.7},
-          {"name": "destroyed", "duration": 2.5, "loop": false, "speed": 1.0}
+          {"name": "idle", "file": "models/buildings/barracks/animations/idle.glb", "duration": 4.0, "loop": true, "speed": 0.9},
+          {"name": "construction", "file": "models/buildings/barracks/animations/construction.glb", "duration": 2.5, "loop": true, "speed": 1.0},
+          {"name": "training", "file": "models/buildings/barracks/animations/training.glb", "duration": 3.0, "loop": true, "speed": 1.2},
+          {"name": "deployment", "file": "models/buildings/barracks/animations/deployment.glb", "duration": 2.0, "loop": false, "speed": 1.5},
+          {"name": "drill_mode", "file": "models/buildings/barracks/animations/drill_mode.glb", "duration": 4.5, "loop": true, "speed": 1.0},
+          {"name": "damaged", "file": "models/buildings/barracks/animations/damaged.glb", "duration": 2.2, "loop": true, "speed": 0.7},
+          {"name": "destroyed", "file": "models/buildings/barracks/animations/destroyed.glb", "duration": 2.5, "loop": false, "speed": 1.0}
         ]
       },
       {
         "name": "war_factory", 
-        "file": "models/buildings/war_factory.glb", 
+        "file": "models/buildings/war_factory/war_factory.glb", 
         "scale": 2.3,
         "default_animation": "idle",
         "animations": [
-          {"name": "idle", "duration": 5.0, "loop": true, "speed": 0.8},
-          {"name": "construction", "duration": 3.0, "loop": true, "speed": 1.0},
-          {"name": "manufacturing", "duration": 4.0, "loop": true, "speed": 1.1},
-          {"name": "assembly_line", "duration": 3.5, "loop": true, "speed": 1.3},
-          {"name": "heavy_production", "duration": 6.0, "loop": true, "speed": 0.9},
-          {"name": "vehicle_rollout", "duration": 3.0, "loop": false, "speed": 1.2},
-          {"name": "damaged", "duration": 2.5, "loop": true, "speed": 0.6},
-          {"name": "destroyed", "duration": 4.0, "loop": false, "speed": 0.8}
-        ]
-      },
-      {
-        "name": "starport", 
-        "file": "models/buildings/starport.glb", 
-        "scale": 2.8,
-        "default_animation": "idle",
-        "animations": [
-          {"name": "idle", "duration": 6.0, "loop": true, "speed": 0.7},
-          {"name": "construction", "duration": 4.0, "loop": true, "speed": 1.0},
-          {"name": "landing_pad_active", "duration": 3.0, "loop": true, "speed": 1.0},
-          {"name": "launch_sequence", "duration": 5.0, "loop": false, "speed": 1.0},
-          {"name": "refueling", "duration": 4.5, "loop": true, "speed": 0.8},
-          {"name": "hangar_doors", "duration": 2.5, "loop": false, "speed": 1.2},
-          {"name": "damaged", "duration": 3.0, "loop": true, "speed": 0.5},
-          {"name": "destroyed", "duration": 5.0, "loop": false, "speed": 0.7}
-        ]
-      },
-      {
-        "name": "research_lab", 
-        "file": "models/buildings/research_lab.glb", 
-        "scale": 1.9,
-        "default_animation": "idle",
-        "animations": [
-          {"name": "idle", "duration": 4.5, "loop": true, "speed": 0.8},
-          {"name": "construction", "duration": 2.8, "loop": true, "speed": 1.0},
-          {"name": "researching", "duration": 5.0, "loop": true, "speed": 0.9},
-          {"name": "experiment", "duration": 3.0, "loop": false, "speed": 1.3},
-          {"name": "data_processing", "duration": 4.0, "loop": true, "speed": 1.1},
-          {"name": "breakthrough", "duration": 2.0, "loop": false, "speed": 1.5},
-          {"name": "damaged", "duration": 2.0, "loop": true, "speed": 0.8},
-          {"name": "destroyed", "duration": 2.8, "loop": false, "speed": 1.0}
-        ]
-      },
-      {
-        "name": "tech_center", 
-        "file": "models/buildings/tech_center.glb", 
-        "scale": 2.1,
-        "default_animation": "idle",
-        "animations": [
-          {"name": "idle", "duration": 5.5, "loop": true, "speed": 0.7},
-          {"name": "construction", "duration": 3.2, "loop": true, "speed": 1.0},
-          {"name": "researching", "duration": 6.0, "loop": true, "speed": 0.8},
-          {"name": "experiment", "duration": 4.0, "loop": false, "speed": 1.0},
-          {"name": "data_processing", "duration": 4.5, "loop": true, "speed": 1.0},
-          {"name": "breakthrough", "duration": 3.0, "loop": false, "speed": 1.2},
-          {"name": "damaged", "duration": 2.5, "loop": true, "speed": 0.7},
-          {"name": "destroyed", "duration": 3.5, "loop": false, "speed": 0.9}
+          {"name": "idle", "file": "models/buildings/war_factory/animations/idle.glb", "duration": 5.0, "loop": true, "speed": 0.8},
+          {"name": "construction", "file": "models/buildings/war_factory/animations/construction.glb", "duration": 3.0, "loop": true, "speed": 1.0},
+          {"name": "manufacturing", "file": "models/buildings/war_factory/animations/manufacturing.glb", "duration": 4.0, "loop": true, "speed": 1.1},
+          {"name": "assembly_line", "file": "models/buildings/war_factory/animations/assembly_line.glb", "duration": 3.5, "loop": true, "speed": 1.3},
+          {"name": "heavy_production", "file": "models/buildings/war_factory/animations/heavy_production.glb", "duration": 6.0, "loop": true, "speed": 0.9},
+          {"name": "vehicle_rollout", "file": "models/buildings/war_factory/animations/vehicle_rollout.glb", "duration": 3.0, "loop": false, "speed": 1.2},
+          {"name": "damaged", "file": "models/buildings/war_factory/animations/damaged.glb", "duration": 2.5, "loop": true, "speed": 0.6},
+          {"name": "destroyed", "file": "models/buildings/war_factory/animations/destroyed.glb", "duration": 4.0, "loop": false, "speed": 0.8}
         ]
       },
       {
         "name": "energy_plant", 
-        "file": "models/buildings/energy_plant.glb", 
+        "file": "models/buildings/energy_plant/energy_plant.glb", 
         "scale": 1.7,
         "default_animation": "idle",
         "animations": [
-          {"name": "idle", "duration": 3.0, "loop": true, "speed": 1.0},
-          {"name": "construction", "duration": 2.0, "loop": true, "speed": 1.0},
-          {"name": "power_generation", "duration": 2.5, "loop": true, "speed": 1.4},
-          {"name": "energy_surge", "duration": 1.5, "loop": false, "speed": 2.0},
-          {"name": "cooling_cycle", "duration": 4.0, "loop": true, "speed": 0.8},
-          {"name": "overload", "duration": 1.0, "loop": true, "speed": 3.0},
-          {"name": "damaged", "duration": 1.8, "loop": true, "speed": 0.9},
-          {"name": "destroyed", "duration": 2.5, "loop": false, "speed": 1.2}
-        ]
-      },
-      {
-        "name": "mineral_processor", 
-        "file": "models/buildings/mineral_processor.glb", 
-        "scale": 1.8,
-        "default_animation": "idle",
-        "animations": [
-          {"name": "idle", "duration": 3.5, "loop": true, "speed": 0.9},
-          {"name": "construction", "duration": 2.3, "loop": true, "speed": 1.0},
-          {"name": "processing", "duration": 3.0, "loop": true, "speed": 1.2},
-          {"name": "conveyor_active", "duration": 2.0, "loop": true, "speed": 1.5},
-          {"name": "refining", "duration": 4.0, "loop": true, "speed": 1.0},
-          {"name": "storage_full", "duration": 5.0, "loop": true, "speed": 0.6},
-          {"name": "damaged", "duration": 2.0, "loop": true, "speed": 0.8},
-          {"name": "destroyed", "duration": 3.0, "loop": false, "speed": 1.0}
-        ]
-      },
-      {
-        "name": "resource_depot", 
-        "file": "models/buildings/resource_depot.glb", 
-        "scale": 1.6,
-        "default_animation": "idle",
-        "animations": [
-          {"name": "idle", "duration": 4.0, "loop": true, "speed": 0.8},
-          {"name": "construction", "duration": 2.0, "loop": true, "speed": 1.0},
-          {"name": "working", "duration": 3.0, "loop": true, "speed": 1.0},
-          {"name": "storage_full", "duration": 6.0, "loop": true, "speed": 0.5},
-          {"name": "damaged", "duration": 2.2, "loop": true, "speed": 0.7},
-          {"name": "destroyed", "duration": 2.5, "loop": false, "speed": 1.0}
+          {"name": "idle", "file": "models/buildings/energy_plant/animations/idle.glb", "duration": 3.0, "loop": true, "speed": 1.0},
+          {"name": "construction", "file": "models/buildings/energy_plant/animations/construction.glb", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "power_generation", "file": "models/buildings/energy_plant/animations/power_generation.glb", "duration": 2.5, "loop": true, "speed": 1.4},
+          {"name": "energy_surge", "file": "models/buildings/energy_plant/animations/energy_surge.glb", "duration": 1.5, "loop": false, "speed": 2.0},
+          {"name": "cooling_cycle", "file": "models/buildings/energy_plant/animations/cooling_cycle.glb", "duration": 4.0, "loop": true, "speed": 0.8},
+          {"name": "overload", "file": "models/buildings/energy_plant/animations/overload.glb", "duration": 1.0, "loop": true, "speed": 3.0},
+          {"name": "damaged", "file": "models/buildings/energy_plant/animations/damaged.glb", "duration": 1.8, "loop": true, "speed": 0.9},
+          {"name": "destroyed", "file": "models/buildings/energy_plant/animations/destroyed.glb", "duration": 2.5, "loop": false, "speed": 1.2}
         ]
       },
       {
         "name": "defense_turret", 
-        "file": "models/buildings/defense_turret.glb", 
+        "file": "models/buildings/defense_turret/defense_turret.glb", 
         "scale": 1.3,
         "default_animation": "idle",
         "animations": [
-          {"name": "idle", "duration": 2.5, "loop": true, "speed": 1.0},
-          {"name": "construction", "duration": 1.8, "loop": true, "speed": 1.0},
-          {"name": "scanning", "duration": 3.0, "loop": true, "speed": 0.8},
-          {"name": "targeting", "duration": 1.0, "loop": true, "speed": 1.5},
-          {"name": "firing", "duration": 0.8, "loop": false, "speed": 2.0},
-          {"name": "reloading", "duration": 2.0, "loop": false, "speed": 1.0},
-          {"name": "turret_rotate", "duration": 2.5, "loop": true, "speed": 1.0},
-          {"name": "damaged", "duration": 1.5, "loop": true, "speed": 0.9},
-          {"name": "destroyed", "duration": 2.0, "loop": false, "speed": 1.2}
-        ]
-      },
-      {
-        "name": "missile_turret", 
-        "file": "models/buildings/missile_turret.glb", 
-        "scale": 1.4,
-        "default_animation": "idle",
-        "animations": [
-          {"name": "idle", "duration": 3.0, "loop": true, "speed": 0.9},
-          {"name": "construction", "duration": 2.0, "loop": true, "speed": 1.0},
-          {"name": "scanning", "duration": 4.0, "loop": true, "speed": 0.7},
-          {"name": "targeting", "duration": 1.5, "loop": true, "speed": 1.2},
-          {"name": "firing", "duration": 1.2, "loop": false, "speed": 1.5},
-          {"name": "reloading", "duration": 3.0, "loop": false, "speed": 0.8},
-          {"name": "turret_rotate", "duration": 3.0, "loop": true, "speed": 0.8},
-          {"name": "damaged", "duration": 1.8, "loop": true, "speed": 0.8},
-          {"name": "destroyed", "duration": 2.5, "loop": false, "speed": 1.0}
-        ]
-      },
-      {
-        "name": "shield_generator", 
-        "file": "models/buildings/shield_generator.glb", 
-        "scale": 1.5,
-        "default_animation": "idle",
-        "animations": [
-          {"name": "idle", "duration": 4.0, "loop": true, "speed": 0.8},
-          {"name": "construction", "duration": 2.5, "loop": true, "speed": 1.0},
-          {"name": "shield_charging", "duration": 3.0, "loop": true, "speed": 1.1},
-          {"name": "shield_active", "duration": 5.0, "loop": true, "speed": 0.9},
-          {"name": "shield_overload", "duration": 1.5, "loop": true, "speed": 2.5},
-          {"name": "energy_transfer", "duration": 2.0, "loop": true, "speed": 1.3},
-          {"name": "damaged", "duration": 2.0, "loop": true, "speed": 0.7},
-          {"name": "destroyed", "duration": 3.0, "loop": false, "speed": 0.9}
-        ]
-      },
-      {
-        "name": "repair_bay", 
-        "file": "models/buildings/repair_bay.glb", 
-        "scale": 1.7,
-        "default_animation": "idle",
-        "animations": [
-          {"name": "idle", "duration": 3.5, "loop": true, "speed": 0.9},
-          {"name": "construction", "duration": 2.2, "loop": true, "speed": 1.0},
-          {"name": "working", "duration": 2.5, "loop": true, "speed": 1.2},
-          {"name": "repair_active", "duration": 3.0, "loop": true, "speed": 1.1},
-          {"name": "maintenance", "duration": 4.0, "loop": true, "speed": 0.8},
-          {"name": "damaged", "duration": 2.0, "loop": true, "speed": 0.8},
-          {"name": "destroyed", "duration": 2.8, "loop": false, "speed": 1.0}
-        ]
-      },
-      {
-        "name": "foundry", 
-        "file": "models/buildings/foundry.glb", 
-        "scale": 2.0,
-        "default_animation": "idle",
-        "animations": [
-          {"name": "idle", "duration": 4.5, "loop": true, "speed": 0.8},
-          {"name": "construction", "duration": 3.0, "loop": true, "speed": 1.0},
-          {"name": "smelting", "duration": 3.5, "loop": true, "speed": 1.1},
-          {"name": "forging", "duration": 4.0, "loop": true, "speed": 1.0},
-          {"name": "cooling", "duration": 5.0, "loop": true, "speed": 0.7},
-          {"name": "damaged", "duration": 2.5, "loop": true, "speed": 0.6},
-          {"name": "destroyed", "duration": 4.0, "loop": false, "speed": 0.8}
+          {"name": "idle", "file": "models/buildings/defense_turret/animations/idle.glb", "duration": 2.5, "loop": true, "speed": 1.0},
+          {"name": "construction", "file": "models/buildings/defense_turret/animations/construction.glb", "duration": 1.8, "loop": true, "speed": 1.0},
+          {"name": "scanning", "file": "models/buildings/defense_turret/animations/scanning.glb", "duration": 3.0, "loop": true, "speed": 0.8},
+          {"name": "targeting", "file": "models/buildings/defense_turret/animations/targeting.glb", "duration": 1.0, "loop": true, "speed": 1.5},
+          {"name": "firing", "file": "models/buildings/defense_turret/animations/firing.glb", "duration": 0.8, "loop": false, "speed": 2.0},
+          {"name": "reloading", "file": "models/buildings/defense_turret/animations/reloading.glb", "duration": 2.0, "loop": false, "speed": 1.0},
+          {"name": "turret_rotate", "file": "models/buildings/defense_turret/animations/turret_rotate.glb", "duration": 2.5, "loop": true, "speed": 1.0},
+          {"name": "damaged", "file": "models/buildings/defense_turret/animations/damaged.glb", "duration": 1.5, "loop": true, "speed": 0.9},
+          {"name": "destroyed", "file": "models/buildings/defense_turret/animations/destroyed.glb", "duration": 2.0, "loop": false, "speed": 1.2}
         ]
       }
     ],
     "resources": [
       {
         "name": "minerals", 
-        "file": "models/resources/minerals.glb", 
+        "file": "models/resources/minerals/minerals.glb", 
         "scale": 1.0,
         "default_animation": "idle",
         "animations": [
-          {"name": "idle", "duration": 8.0, "loop": true, "speed": 0.3},
-          {"name": "crystal_glow", "duration": 4.0, "loop": true, "speed": 0.5}
+          {"name": "idle", "file": "models/resources/minerals/animations/idle.glb", "duration": 8.0, "loop": true, "speed": 0.3},
+          {"name": "crystal_glow", "file": "models/resources/minerals/animations/crystal_glow.glb", "duration": 4.0, "loop": true, "speed": 0.5}
         ]
       },
       {
         "name": "energy", 
-        "file": "models/resources/energy.glb", 
+        "file": "models/resources/energy/energy.glb", 
         "scale": 1.0,
         "default_animation": "idle",
         "animations": [
-          {"name": "idle", "duration": 3.0, "loop": true, "speed": 1.0},
-          {"name": "energy_pulse", "duration": 2.0, "loop": true, "speed": 1.5}
-        ]
-      }
-    ],
-    "terrain": [
-      {
-        "name": "grass_tile", 
-        "file": "models/terrain/grass_tile.glb", 
-        "scale": 1.0,
-        "animations": []
-      },
-      {
-        "name": "dirt_tile", 
-        "file": "models/terrain/dirt_tile.glb", 
-        "scale": 1.0,
-        "animations": []
-      }
-    ],
-    "props": [
-      {
-        "name": "obstacle_rock", 
-        "file": "models/props/obstacle_rock.glb", 
-        "scale": 1.0,
-        "animations": []
-      },
-      {
-        "name": "obstacle_tree", 
-        "file": "models/props/obstacle_tree.glb", 
-        "scale": 1.0,
-        "default_animation": "sway",
-        "animations": [
-          {"name": "sway", "duration": 6.0, "loop": true, "speed": 0.6}
+          {"name": "idle", "file": "models/resources/energy/animations/idle.glb", "duration": 3.0, "loop": true, "speed": 1.0},
+          {"name": "energy_pulse", "file": "models/resources/energy/animations/energy_pulse.glb", "duration": 2.0, "loop": true, "speed": 1.5}
         ]
       }
     ],
     "effects": [
       {
         "name": "explosion", 
-        "file": "models/effects/explosion.glb", 
+        "file": "models/effects/explosion/explosion.glb", 
         "scale": 1.0,
         "default_animation": "explode",
         "animations": [
-          {"name": "explode", "duration": 1.5, "loop": false, "speed": 1.0}
-        ]
-      },
-      {
-        "name": "impact_hit", 
-        "file": "models/effects/impact_hit.glb", 
-        "scale": 0.8,
-        "default_animation": "impact",
-        "animations": [
-          {"name": "impact", "duration": 0.5, "loop": false, "speed": 1.5}
-        ]
-      },
-      {
-        "name": "shield_effect", 
-        "file": "models/effects/shield_effect.glb", 
-        "scale": 1.2,
-        "default_animation": "shield_pulse",
-        "animations": [
-          {"name": "shield_pulse", "duration": 2.0, "loop": true, "speed": 1.0}
+          {"name": "explode", "file": "models/effects/explosion/animations/explode.glb", "duration": 1.5, "loop": false, "speed": 1.0}
         ]
       }
     ]
   },
   "textures": {
     "ui": [
-      {"name": "button_normal", "file": "textures/ui/button_normal.png", "dimensions": [196, 64]},
-      {"name": "button_hover", "file": "textures/ui/button_hover.png", "dimensions": [196, 64]},
-      {"name": "button_pressed", "file": "textures/ui/button_pressed.png", "dimensions": [196, 64]},
-      {"name": "panel_background", "file": "textures/ui/panel_background.png", "dimensions": [512, 512]},
-      {"name": "minimap_frame", "file": "textures/ui/minimap_frame.png", "dimensions": [256, 256]},
-      {"name": "selection_circle", "file": "textures/ui/selection_circle.png", "dimensions": [128, 128]},
-      {"name": "health_bar_frame", "file": "textures/ui/health_bar_frame.png", "dimensions": [64, 16]},
-      {"name": "health_bar_fill", "file": "textures/ui/health_bar_fill.png", "dimensions": [60, 12]},
-      {"name": "resource_icon_minerals", "file": "textures/ui/resource_icon_minerals.png", "dimensions": [32, 32]},
-      {"name": "resource_icon_energy", "file": "textures/ui/resource_icon_energy.png", "dimensions": [32, 32]}
+      {"name": "button_normal", "file": "textures/ui/buttons/button_normal.png", "dimensions": [196, 64]},
+      {"name": "button_hover", "file": "textures/ui/buttons/button_hover.png", "dimensions": [196, 64]},
+      {"name": "button_pressed", "file": "textures/ui/buttons/button_pressed.png", "dimensions": [196, 64]},
+      {"name": "panel_background", "file": "textures/ui/panels/panel_background.png", "dimensions": [512, 512]},
+      {"name": "minimap_frame", "file": "textures/ui/minimap/minimap_frame.png", "dimensions": [256, 256]},
+      {"name": "selection_circle", "file": "textures/ui/selection/selection_circle.png", "dimensions": [128, 128]},
+      {"name": "health_bar_frame", "file": "textures/ui/health/health_bar_frame.png", "dimensions": [64, 16]},
+      {"name": "health_bar_fill", "file": "textures/ui/health/health_bar_fill.png", "dimensions": [60, 12]},
+      {"name": "resource_icon_minerals", "file": "textures/ui/resources/resource_icon_minerals.png", "dimensions": [32, 32]},
+      {"name": "resource_icon_energy", "file": "textures/ui/resources/resource_icon_energy.png", "dimensions": [32, 32]}
     ]
   },
   "sounds": {
     "units": [
       {"name": "unit_select", "file": "sounds/units/unit_select.wav"},
       {"name": "unit_move", "file": "sounds/units/unit_move.wav"},
-      {"name": "unit_attack", "file": "sounds/units/unit_attack.wav"}
+      {"name": "unit_attack", "file": "sounds/units/unit_attack.wav"},
+      {"name": "unit_death", "file": "sounds/units/unit_death.wav"}
     ],
     "buildings": [
       {"name": "building_place", "file": "sounds/buildings/building_place.wav"},
@@ -427,19 +209,28 @@
     ],
     "ui": [
       {"name": "button_click", "file": "sounds/ui/button_click.wav"},
-      {"name": "menu_open", "file": "sounds/ui/menu_open.wav"}
+      {"name": "menu_open", "file": "sounds/ui/menu_open.wav"},
+      {"name": "menu_close", "file": "sounds/ui/menu_close.wav"},
+      {"name": "button_hover", "file": "sounds/ui/button_hover.wav"}
     ],
     "game": [
       {"name": "resource_gather", "file": "sounds/game/resource_gather.wav"},
-      {"name": "victory", "file": "sounds/game/victory.wav"}
+      {"name": "victory", "file": "sounds/game/victory.wav"},
+      {"name": "defeat", "file": "sounds/game/defeat.wav"},
+      {"name": "alert", "file": "sounds/game/alert.wav"},
+      {"name": "notification", "file": "sounds/game/notification.wav"}
     ]
   },
   "music": [
     {"name": "main_theme", "file": "music/main_theme.ogg"},
     {"name": "gameplay", "file": "music/gameplay.ogg"},
-    {"name": "battle_theme", "file": "music/battle_theme.ogg"}
+    {"name": "battle_theme", "file": "music/battle_theme.ogg"},
+    {"name": "victory_theme", "file": "music/victory_theme.ogg"},
+    {"name": "ambient", "file": "music/ambient.ogg"}
   ],
   "fonts": [
-    {"name": "main_font", "file": "fonts/main_font.ttf"}
+    {"name": "main_font", "file": "fonts/main_font.ttf"},
+    {"name": "title_font", "file": "fonts/title_font.ttf"},
+    {"name": "ui_font", "file": "fonts/ui_font.ttf"}
   ]
 }

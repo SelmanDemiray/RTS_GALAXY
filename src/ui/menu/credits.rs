@@ -1,47 +1,65 @@
 use macroquad::prelude::*;
-use crate::game::GameState;
+use crate::game::{GameState, GameScreen};
+use crate::audio::AudioManager;
+use crate::resources::ResourceManager;
 use super::system::MenuSystem;
 
-pub fn draw(_menu: &MenuSystem, _game_state: &GameState) {
-    let screen_center_x = screen_width() / 2.0;
+pub fn draw_credits(
+    menu_system: &mut MenuSystem,
+    game_state: &mut GameState,
+    audio_manager: &AudioManager,
+    resource_manager: &ResourceManager
+) {
+    let center_x = screen_width() / 2.0;
+    let center_y = screen_height() / 2.0;
     
-    draw_text(
-        "Credits",
-        screen_center_x - 70.0,
-        120.0,
-        48.0,
-        WHITE
-    );
+    // Draw title
+    let title = "CREDITS";
+    let title_size = 36.0;
+    let title_dims = measure_text(title, None, title_size as u16, 1.0);
+    draw_text(title, center_x - title_dims.width / 2.0, center_y - 200.0, title_size, WHITE);
     
-    draw_text(
-        "Game created by: You!",
-        screen_center_x - 150.0,
-        200.0,
-        24.0,
-        WHITE
-    );
+    // Credits content
+    let credits_text = vec![
+        "Galaxy RTS",
+        "",
+        "Game Development:",
+        "  - AI Assistant (GitHub Copilot)",
+        "",
+        "Engine:",
+        "  - Macroquad (Rust Game Engine)",
+        "",
+        "Libraries:",
+        "  - Serde (Serialization)",
+        "  - Tokio (Async Runtime)",
+        "",
+        "Special Thanks:",
+        "  - Rust Community",
+        "  - Open Source Contributors",
+        "",
+        "This is a demonstration RTS game",
+        "featuring advanced zoom mechanics",
+        "and galactic-scale gameplay.",
+    ];
     
-    // Add more credits content
-    let y_start = 250.0;
-    let line_spacing = 30.0;
+    let line_height = 24.0;
+    let start_y = center_y - 100.0;
     
-    draw_text("Programming Team", screen_center_x - 100.0, y_start, 20.0, GOLD);
-    draw_text("Lead Developer - Your Name", screen_center_x - 150.0, y_start + line_spacing, 18.0, WHITE);
-    draw_text("AI Programmer - GitHub Copilot", screen_center_x - 150.0, y_start + line_spacing*2.0, 18.0, WHITE);
+    for (i, line) in credits_text.iter().enumerate() {
+        let y_pos = start_y + (i as f32) * line_height;
+        let text_size = if line.is_empty() { 16.0 } else if line.starts_with("  ") { 18.0 } else { 20.0 };
+        let text_dims = measure_text(line, None, text_size as u16, 1.0);
+        draw_text(line, center_x - text_dims.width / 2.0, y_pos, text_size, WHITE);
+    }
     
-    draw_text("Art Team", screen_center_x - 60.0, y_start + line_spacing*3.5, 20.0, GOLD);
-    draw_text("Game Artist - Fantasy RTS Art Team", screen_center_x - 150.0, y_start + line_spacing*4.5, 18.0, WHITE);
-    
-    draw_text("Special Thanks", screen_center_x - 80.0, y_start + line_spacing*6.0, 20.0, GOLD);
-    draw_text("All the open source projects that made this possible", screen_center_x - 240.0, y_start + line_spacing*7.0, 18.0, WHITE);
-    draw_text("macroquad, egui, and Rust community", screen_center_x - 190.0, y_start + line_spacing*8.0, 18.0, WHITE);
-    draw_text("Asset creators and open source art contributors", screen_center_x - 220.0, y_start + line_spacing*9.0, 18.0, WHITE);
-    
-    draw_text(
-        "Press ESC to return to menu",
-        screen_center_x - 150.0,
-        screen_height() - 50.0,
-        20.0,
-        LIGHTGRAY
-    );
+    // Back button
+    let (mouse_x, mouse_y) = mouse_position();
+    let button_width = 150.0;
+    let button_height = 40.0;
+    let back_y = center_y + 200.0;
+    let back_hovered = menu_system.is_point_in_rect(mouse_x, mouse_y, center_x - button_width / 2.0, back_y, button_width, button_height);
+    if menu_system.draw_button(center_x - button_width / 2.0, back_y, button_width, button_height, "BACK", back_hovered) {
+        game_state.current_screen = GameScreen::MainMenu;
+        audio_manager.play_ui_click(resource_manager, game_state);
+    }
 }

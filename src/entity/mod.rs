@@ -32,7 +32,7 @@ pub enum UnitAnimationState {
     Gathering,
     Building,
     Dying,
-    Special, // For unit-specific animations
+    Special,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,7 +60,7 @@ impl UnitAnimation {
     pub fn set_state(&mut self, new_state: UnitAnimationState, loop_anim: bool) {
         if self.current_state != new_state {
             self.next_state = Some(new_state);
-            self.transition_time = 0.2; // Smooth transition
+            self.transition_time = 0.2;
             self.loop_animation = loop_anim;
         }
     }
@@ -77,9 +77,7 @@ impl UnitAnimation {
         
         self.animation_time += dt * self.animation_speed;
         
-        // Handle non-looping animations
         if !self.loop_animation && self.animation_time >= self.get_animation_duration() {
-            // Animation finished, return to idle
             self.set_state(UnitAnimationState::Idle, true);
         }
     }
@@ -121,7 +119,7 @@ pub struct Unit {
     
     // Animation system
     pub animation: UnitAnimation,
-    pub facing_direction: f32, // Rotation in radians
+    pub facing_direction: f32,
     pub is_moving: bool,
     pub is_attacking: bool,
     pub is_gathering: bool,
@@ -131,10 +129,10 @@ pub struct Unit {
 impl Unit {
     pub fn new(id: u32, unit_type: UnitType, x: f32, y: f32, player_id: u8) -> Self {
         let (health, speed, attack_damage, attack_range, attack_cooldown, current_resources, resource_capacity) = match unit_type {
-            UnitType::Worker => (50.0, 2.0, 5.0, 20.0, 2.0, Some(0), Some(50)),
-            UnitType::Fighter => (80.0, 3.0, 15.0, 30.0, 1.5, None, None),
-            UnitType::Ranger => (60.0, 2.5, 20.0, 50.0, 2.0, None, None),
-            UnitType::Tank => (150.0, 1.5, 30.0, 25.0, 3.0, None, None),
+            UnitType::Worker => (50.0, 80.0, 5.0, 20.0, 2.0, Some(0), Some(50)),
+            UnitType::Fighter => (80.0, 100.0, 15.0, 30.0, 1.5, None, None),
+            UnitType::Ranger => (60.0, 90.0, 20.0, 50.0, 2.0, None, None),
+            UnitType::Tank => (150.0, 60.0, 30.0, 25.0, 3.0, None, None),
             UnitType::Building => (200.0, 0.0, 0.0, 0.0, 0.0, None, None),
             UnitType::Headquarters => (500.0, 0.0, 0.0, 0.0, 0.0, None, None),
         };
@@ -168,7 +166,6 @@ impl Unit {
     }
     
     pub fn update_animation_state(&mut self) {
-        // Determine animation state based on unit status
         if self.health <= 0.0 {
             self.animation.set_state(UnitAnimationState::Dying, false);
         } else if self.is_attacking && self.current_cooldown > 0.0 {
@@ -178,7 +175,7 @@ impl Unit {
         } else if self.is_building {
             self.animation.set_state(UnitAnimationState::Building, true);
         } else if self.is_moving {
-            let anim_state = if self.speed > 2.5 {
+            let anim_state = if self.speed > 80.0 {
                 UnitAnimationState::Running
             } else {
                 UnitAnimationState::Walking
@@ -188,69 +185,8 @@ impl Unit {
             self.animation.set_state(UnitAnimationState::Idle, true);
         }
     }
-    
-    pub fn get_required_animations(&self) -> Vec<String> {
-        let base_animations = vec![
-            "idle".to_string(),
-            "walking".to_string(),
-            "dying".to_string(),
-        ];
-        
-        let mut animations = base_animations;
-        
-        match self.unit_type {
-            UnitType::Worker => {
-                animations.extend(vec![
-                    "gathering_minerals".to_string(),
-                    "gathering_energy".to_string(),
-                    "building".to_string(),
-                    "carrying_resources".to_string(),
-                ]);
-            },
-            UnitType::Fighter => {
-                animations.extend(vec![
-                    "running".to_string(),
-                    "melee_attack".to_string(),
-                    "blocking".to_string(),
-                    "victory_pose".to_string(),
-                ]);
-            },
-            UnitType::Ranger => {
-                animations.extend(vec![
-                    "running".to_string(),
-                    "aiming".to_string(),
-                    "shooting".to_string(),
-                    "reloading".to_string(),
-                ]);
-            },
-            UnitType::Tank => {
-                animations.extend(vec![
-                    "turret_rotate".to_string(),
-                    "firing_cannon".to_string(),
-                    "damaged_idle".to_string(),
-                ]);
-            },
-            UnitType::Building => {
-                animations.extend(vec![
-                    "construction".to_string(),
-                    "working".to_string(),
-                    "damaged".to_string(),
-                ]);
-            },
-            UnitType::Headquarters => {
-                animations.extend(vec![
-                    "production".to_string(),
-                    "damaged".to_string(),
-                    "upgrading".to_string(),
-                ]);
-            },
-        }
-        
-        animations
-    }
 }
 
-// Create a serializable color wrapper
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SerializableColor {
     pub r: f32,
@@ -295,7 +231,7 @@ impl Player {
             minerals: 0,
             energy: 0,
             color,
-            is_ai: id != 0, // AI if not player 0
+            is_ai: id != 0,
         }
     }
 }

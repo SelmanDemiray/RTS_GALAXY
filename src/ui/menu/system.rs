@@ -1,19 +1,21 @@
 use macroquad::prelude::*;
 use crate::game::{GameState, GameScreen};
-use crate::resources::ResourceManager;
 use crate::audio::AudioManager;
+use crate::resources::ResourceManager;
 
 pub struct MenuSystem {
-    pub selected_button: usize, // Make this public
+    pub selected_button: i32,
+    pub button_hover_time: f32,
 }
 
 impl MenuSystem {
     pub fn new() -> Self {
         Self {
             selected_button: 0,
+            button_hover_time: 0.0,
         }
     }
-
+    
     pub fn initialize(&mut self, _resource_manager: &ResourceManager) {
         self.selected_button = 0;
     }
@@ -116,6 +118,62 @@ impl MenuSystem {
         }
     }
 
+    pub fn draw_main_menu(
+        &mut self,
+        game_state: &mut GameState,
+        audio_manager: &AudioManager,
+        resource_manager: &ResourceManager
+    ) {
+        super::main_menu::draw_main_menu(self, game_state, audio_manager, resource_manager);
+    }
+    
+    pub fn draw_settings(
+        &mut self,
+        game_state: &mut GameState,
+        audio_manager: &AudioManager,
+        resource_manager: &ResourceManager
+    ) {
+        super::settings::draw_settings(self, game_state, audio_manager, resource_manager);
+    }
+    
+    pub fn draw_credits(
+        &mut self,
+        game_state: &mut GameState,
+        audio_manager: &AudioManager,
+        resource_manager: &ResourceManager
+    ) {
+        super::credits::draw_credits(self, game_state, audio_manager, resource_manager);
+    }
+    
+    pub fn draw_button(&self, x: f32, y: f32, width: f32, height: f32, text: &str, is_hovered: bool) -> bool {
+        let color = if is_hovered {
+            LIGHTGRAY
+        } else {
+            GRAY
+        };
+        
+        draw_rectangle(x, y, width, height, color);
+        draw_rectangle_lines(x, y, width, height, 2.0, WHITE);
+        
+        let text_size = 24.0;
+        let text_dims = measure_text(text, None, text_size as u16, 1.0);
+        let text_x = x + (width - text_dims.width) / 2.0;
+        let text_y = y + (height + text_dims.height) / 2.0;
+        
+        draw_text(text, text_x, text_y, text_size, WHITE);
+        
+        // Check if clicked
+        if is_hovered && is_mouse_button_pressed(MouseButton::Left) {
+            return true;
+        }
+        
+        false
+    }
+    
+    pub fn is_point_in_rect(&self, px: f32, py: f32, x: f32, y: f32, width: f32, height: f32) -> bool {
+        px >= x && px <= x + width && py >= y && py <= y + height
+    }
+    
     fn draw_main_menu(&self) {
         let screen_width = screen_width();
         let screen_height = screen_height();

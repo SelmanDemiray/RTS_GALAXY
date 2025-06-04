@@ -1,45 +1,60 @@
 use macroquad::prelude::*;
 use crate::game::{GameState, GameScreen};
+use crate::audio::AudioManager;
+use crate::resources::ResourceManager;
 use super::system::MenuSystem;
 
-pub fn draw(menu: &MenuSystem, game_state: &GameState) {
-    let screen_center_x = screen_width() / 2.0;
-
-    // Draw title
-    let title = "Fantasy RTS";
-    let title_size = measure_text(title, None, menu.get_title_font_size() as u16, 1.0);
-    draw_text(
-        title,
-        screen_center_x - title_size.width / 2.0,
-        menu.get_title_y(),
-        menu.get_title_font_size(),
-        GOLD
-    );
-
-    // Draw buttons
-    menu.draw_button("Play Game", menu.get_first_button_y(), GameScreen::Playing, game_state);
-    menu.draw_button("Settings", menu.get_first_button_y() + menu.get_button_spacing(), GameScreen::Settings, game_state);
-    menu.draw_button("Credits", menu.get_first_button_y() + menu.get_button_spacing() * 2.0, GameScreen::Credits, game_state);
+pub fn draw_main_menu(
+    menu_system: &mut MenuSystem,
+    game_state: &mut GameState,
+    audio_manager: &AudioManager,
+    resource_manager: &ResourceManager
+) {
+    let center_x = screen_width() / 2.0;
+    let center_y = screen_height() / 2.0;
     
-    // Draw quit button manually since it doesn't map to a screen
-    let quit_text = "Quit";
-    let quit_y = menu.get_first_button_y() + menu.get_button_spacing() * 3.0;
-    let button_width = measure_text(quit_text, None, 32, 1.0).width;
-    let x = (screen_width() - button_width) / 2.0;
-    let color = if menu.selected_button == 3 { YELLOW } else { WHITE };
-    draw_text(quit_text, x, quit_y, 32.0, color);
-    if menu.selected_button == 3 {
-        draw_text(">", x - 30.0, quit_y, 32.0, YELLOW);
-        draw_text("<", x + button_width + 10.0, quit_y, 32.0, YELLOW);
+    // Draw title
+    let title = "GALAXY RTS";
+    let title_size = 48.0;
+    let title_dims = measure_text(title, None, title_size as u16, 1.0);
+    draw_text(title, center_x - title_dims.width / 2.0, center_y - 150.0, title_size, WHITE);
+    
+    // Button dimensions
+    let button_width = 200.0;
+    let button_height = 50.0;
+    let button_spacing = 60.0;
+    
+    let (mouse_x, mouse_y) = mouse_position();
+    
+    // Play button
+    let play_y = center_y - 50.0;
+    let play_hovered = menu_system.is_point_in_rect(mouse_x, mouse_y, center_x - button_width / 2.0, play_y, button_width, button_height);
+    if menu_system.draw_button(center_x - button_width / 2.0, play_y, button_width, button_height, "PLAY", play_hovered) {
+        game_state.current_screen = GameScreen::Playing;
+        audio_manager.play_ui_click(resource_manager, game_state);
     }
-
-    // Version info
-    let version = "v0.1";
-    draw_text(
-        version,
-        screen_width() - 50.0,
-        screen_height() - 20.0,
-        16.0,
-        LIGHTGRAY
-    );
+    
+    // Settings button
+    let settings_y = center_y + 10.0;
+    let settings_hovered = menu_system.is_point_in_rect(mouse_x, mouse_y, center_x - button_width / 2.0, settings_y, button_width, button_height);
+    if menu_system.draw_button(center_x - button_width / 2.0, settings_y, button_width, button_height, "SETTINGS", settings_hovered) {
+        game_state.current_screen = GameScreen::Settings;
+        audio_manager.play_ui_click(resource_manager, game_state);
+    }
+    
+    // Credits button
+    let credits_y = center_y + 70.0;
+    let credits_hovered = menu_system.is_point_in_rect(mouse_x, mouse_y, center_x - button_width / 2.0, credits_y, button_width, button_height);
+    if menu_system.draw_button(center_x - button_width / 2.0, credits_y, button_width, button_height, "CREDITS", credits_hovered) {
+        game_state.current_screen = GameScreen::Credits;
+        audio_manager.play_ui_click(resource_manager, game_state);
+    }
+    
+    // Quit button
+    let quit_y = center_y + 130.0;
+    let quit_hovered = menu_system.is_point_in_rect(mouse_x, mouse_y, center_x - button_width / 2.0, quit_y, button_width, button_height);
+    if menu_system.draw_button(center_x - button_width / 2.0, quit_y, button_width, button_height, "QUIT", quit_hovered) {
+        game_state.request_quit();
+        audio_manager.play_ui_click(resource_manager, game_state);
+    }
 }
