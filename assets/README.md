@@ -1,12 +1,12 @@
-# 3D Game Assets with Animation System
+# Enhanced 3D Game Assets with Advanced Building System
 
-This directory contains all 3D models and media assets for the RTS game, organized by type. Each unit and building includes specific animations for enhanced visual feedback.
+This directory contains all 3D models and media assets for the RTS game, organized by type. The game features an extensive building system with specialized structures and rich animation feedback.
 
 ## Directory Structure
 
 - **models/**
   - **units/**: 3D models for units (.glb format) with animations
-  - **buildings/**: 3D models for buildings (.glb format) with animations
+  - **buildings/**: 3D models for buildings (.glb format) with extensive animations
   - **resources/**: 3D models for resource nodes (.glb format)
   - **terrain/**: 3D terrain models and elements (.glb format)
   - **props/**: 3D models for props and decorations (.glb format)
@@ -17,169 +17,126 @@ This directory contains all 3D models and media assets for the RTS game, organiz
 - **music/**: Background music files (.ogg format)
 - **fonts/**: Game fonts (.ttf format)
 
-## Animation System
+## Enhanced Building System
 
-Each unit type has specific animations that provide visual feedback for player actions:
+### Building Categories
 
-### Worker Unit Animations
-| Animation Name | Duration | Loop | Description | Triggered When |
-|----------------|----------|------|-------------|----------------|
-| idle | 2.0s | Yes | Standing still, breathing | No action |
-| walking | 1.0s | Yes | Basic movement | Moving to destination |
-| gathering_minerals | 1.5s | Yes | Mining/collecting crystals | At mineral node |
-| gathering_energy | 1.5s | Yes | Siphoning energy | At energy node |
-| building | 2.0s | Yes | Construction work | Building structures |
-| carrying_resources | 1.2s | Yes | Walking with resource load | Moving with resources |
-| dying | 1.2s | No | Death animation | Health reaches 0 |
+#### Command & Control Buildings
+These buildings serve as centers of operations and provide command capacity:
 
-### Fighter Unit Animations
-| Animation Name | Duration | Loop | Description | Triggered When |
-|----------------|----------|------|-------------|----------------|
-| idle | 2.0s | Yes | Combat ready stance | No action |
-| walking | 1.0s | Yes | Marching movement | Moving slowly |
-| running | 0.8s | Yes | Quick movement | Moving at speed |
-| melee_attack | 0.6s | No | Sword/weapon swing | Attacking enemy |
-| blocking | 1.0s | Yes | Defensive posture | Under attack |
-| victory_pose | 2.0s | No | Celebration stance | After victory |
-| dying | 1.2s | No | Death animation | Health reaches 0 |
+| Building Type | Function | Key Animations | Special Features |
+|---------------|----------|----------------|------------------|
+| **Headquarters** | Main command center, trains workers | command_active, communication, emergency_mode, shield_up | Population +20, Research points +10 |
+| **Command Center** | Secondary command, extends control | command_active, communication, emergency_mode | Population +15, Power generation |
+| **Control Tower** | Communication hub, radar coverage | communication, scanning | Enhanced unit coordination |
 
-### Ranger Unit Animations
-| Animation Name | Duration | Loop | Description | Triggered When |
-|----------------|----------|------|-------------|----------------|
-| idle | 2.0s | Yes | Alert scanning stance | No action |
-| walking | 1.0s | Yes | Patrol movement | Moving slowly |
-| running | 0.8s | Yes | Quick reposition | Moving at speed |
-| aiming | 0.5s | Yes | Taking aim | Targeting enemy |
-| shooting | 0.4s | No | Firing weapon | Attacking enemy |
-| reloading | 1.0s | No | Weapon reload | After multiple shots |
-| dying | 1.2s | No | Death animation | Health reaches 0 |
+#### Military Production Buildings
+Specialized facilities for training different unit types:
 
-### Tank Unit Animations
-| Animation Name | Duration | Loop | Description | Triggered When |
-|----------------|----------|------|-------------|----------------|
-| idle | 3.0s | Yes | Engine idling | No action |
-| walking | 1.5s | Yes | Tank movement | Moving |
-| turret_rotate | 2.0s | Yes | Turret turning | Targeting |
-| firing_cannon | 1.0s | No | Cannon blast | Attacking |
-| damaged_idle | 3.0s | Yes | Smoking/sparking | Below 50% health |
-| dying | 2.0s | No | Explosion sequence | Health reaches 0 |
+| Building Type | Function | Key Animations | Units Produced |
+|---------------|----------|----------------|----------------|
+| **Barracks** | Infantry training facility | training, deployment, drill_mode | Workers, Fighters, Rangers |
+| **War Factory** | Vehicle production facility | manufacturing, assembly_line, heavy_production, vehicle_rollout | Tanks, Armored units |
+| **Starport** | Aerospace unit production | landing_pad_active, launch_sequence, refueling, hangar_doors | Air units, Space units |
 
-### Building Animations
-| Animation Name | Duration | Loop | Description | Triggered When |
-|----------------|----------|------|-------------|----------------|
-| idle | 3-4s | Yes | Normal operation | Default state |
-| construction | 2.0s | Yes | Being built | Under construction |
-| working | 2.5s | Yes | Active production | Training units |
-| damaged | 2.0s | Yes | Smoking/fire | Below 50% health |
-| production | 3.0s | Yes | Manufacturing | Creating units (HQ) |
-| upgrading | 5.0s | Yes | Improvement work | During upgrades |
+#### Research & Technology Buildings
+Advance your civilization's technological capabilities:
 
-## Creating Animated Models in Blender
+| Building Type | Function | Key Animations | Research Areas |
+|---------------|----------|----------------|----------------|
+| **Research Lab** | Basic research facility | researching, experiment, data_processing, breakthrough | Military, Resource tech |
+| **Tech Center** | Advanced research hub | researching, experiment, data_processing, breakthrough | Advanced weaponry, Shields |
+| **Observatory** | Space research center | scanning, data_analysis | Space exploration tech |
 
-### Animation Requirements
-1. **Frame Rate**: 30 FPS for all animations
-2. **Bone Setup**: Use armatures for character animations
-3. **Animation Naming**: Exact names as specified in tables above
-4. **Root Motion**: Keep root bone at origin for position control
-5. **Loop Compatibility**: Ensure looping animations start/end seamlessly
+#### Resource Management Buildings
+Optimize resource collection and processing:
 
-### Blender Animation Workflow
-1. Create base model with proper proportions
-2. Add armature with appropriate bone hierarchy
-3. Weight paint vertices to bones
-4. Create animation actions for each required animation
-5. Name actions exactly as specified in manifest
-6. Test loops and transitions
-7. Export with animations included
+| Building Type | Function | Key Animations | Resource Effects |
+|---------------|----------|----------------|------------------|
+| **Energy Plant** | Power generation | power_generation, energy_surge, cooling_cycle, overload | Provides 100 power units |
+| **Mineral Processor** | Mineral refinement | processing, conveyor_active, refining, storage_full | +50% mineral efficiency |
+| **Resource Depot** | Resource storage | working, storage_full | Increases storage capacity |
+| **Refinery Complex** | Advanced processing | multi_stage_refining, quality_control | Premium resource output |
 
-### Export Settings for Animated Models
-- Format: glTF Binary (.glb)
-- Include: Selected Objects
-- Transform: Y Up
-- Geometry: Apply Modifiers: On
-- Animation: 
-  - Animation Mode: Actions
-  - Export all actions: On
-  - NLA Strips: Off
-  - Force Sample Animations: On
-  - Group by NLA Track: Off
+#### Defense Structures
+Protect your base from enemy attacks:
 
-## Implementation
+| Building Type | Function | Key Animations | Combat Capabilities |
+|---------------|----------|----------------|---------------------|
+| **Defense Turret** | Anti-ground defense | scanning, targeting, firing, reloading, turret_rotate | Medium range, high accuracy |
+| **Missile Turret** | Anti-air defense | scanning, targeting, firing, reloading, turret_rotate | Long range, area damage |
+| **Shield Generator** | Area protection | shield_charging, shield_active, shield_overload, energy_transfer | Deflects projectiles |
+| **Bunker** | Fortified position | manning, firing_ports | Houses infantry units |
 
-To add new 3D assets:
-1. Create the model in Blender
-2. Export to .glb format
-3. Place the file in the appropriate models directory
-4. Update the asset manifest (see below)
+### Advanced Animation System
 
-## Resource Manifest
+#### Building State Animations
+Each building type has animations that reflect its current operational state:
 
-The `asset_manifest.json` file in this directory maintains a registry of all 
-game assets and their properties. When adding new assets, please update this
-file to ensure the ResourceManager properly loads them.
+1. **Construction Phase**
+   - Duration: 2-4 seconds
+   - Shows scaffolding, sparks, construction activity
+   - Transitions to operational when complete
 
-## Creating Models in Blender
+2. **Operational States**
+   - **Idle**: Baseline operational animations
+   - **Active Work**: Enhanced activity during production/research
+   - **Emergency**: High-alert, rapid activity animations
+   - **Maintenance**: Periodic upkeep activities
 
-When creating models in Blender for the game:
+3. **Damage States**
+   - **Light Damage**: Smoke effects, flickering lights
+   - **Heavy Damage**: Fire, sparks, structural damage
+   - **Destroyed**: Collapse sequence, explosion effects
 
-1. Use appropriate scale (1 Blender unit = 1 meter in game)
-2. Apply all transformations before export
-3. Export as glTF Binary (.glb) format
-4. Set the correct orientation (Y-up for Blender exports)
-5. Include materials and textures in the export
-6. For animated models, include armatures and animations
+4. **Special Function Animations**
+   - **Power Buildings**: Energy surges, cooling cycles
+   - **Production Buildings**: Assembly lines, deployment sequences
+   - **Defense Buildings**: Targeting, firing, reloading
+   - **Research Buildings**: Experiments, data processing
 
-## Export Settings for Blender
+#### Animation Triggers
+Animations are triggered by various game events:
 
-When exporting from Blender to glTF:
+- **Construction**: Building placement and construction progress
+- **Production**: Unit training, research projects
+- **Combat**: Under attack, firing weapons
+- **Resource State**: Power levels, resource availability
+- **Upgrade**: Building improvements and modifications
 
-- Format: glTF Binary (.glb)
-- Include: Selected Objects
-- Transform: Y Up
-- Geometry:
-  - Apply Modifiers: On
-  - UVs: On
-  - Normals: On
-  - Tangents: On
-  - Vertex Colors: On
-  - Materials: On
-  - Textures: On
-  - Animations: On (for animated assets)
+### Building Integration with Gameplay
 
-## Animation Integration
+#### Power System
+- Buildings consume/generate power
+- Insufficient power triggers low-power animations
+- Power surges activate overcharge animations
 
-### Code Integration
-- Animations are loaded via `ResourceManager` from `asset_manifest.json`
-- Unit animation state is managed by `UnitAnimation` struct
-- Visual feedback provided through `Model3D.draw_with_animation()`
-- State transitions handled automatically based on unit actions
+#### Damage System
+- Progressive damage states with visual feedback
+- Repair animations when being restored
+- Destruction sequences for eliminated buildings
 
-### Performance Considerations
-- All animations are preloaded during game initialization
-- Animation blending provides smooth transitions
-- LOD system can disable animations at distant zoom levels
-- Animation culling for off-screen units
+#### Production Feedback
+- Visual cues for unit production progress
+- Deployment animations for completed units
+- Queue indicators for pending production
 
-### Testing Animations
-1. Place units in-game
-2. Order various actions (move, attack, gather)
-3. Verify correct animations play
-4. Check animation loops are smooth
-5. Test state transitions
-6. Verify animation performance
+### Asset Creation Guidelines
 
-## Asset Creation Guidelines
+#### Visual Consistency
+- Maintain faction-specific architectural styles
+- Use consistent material and lighting approaches
+- Ensure animations support gameplay feedback
 
-### Visual Consistency
-- Maintain consistent art style across all units
-- Use similar color palettes for faction identification
-- Ensure readable silhouettes at game camera distance
-- Test visibility at various zoom levels
+#### Performance Optimization
+- LOD system for distant buildings
+- Animation culling for off-screen structures
+- Efficient texture usage across building types
 
-### Technical Standards
-- Keep polygon count within specified limits
-- Optimize texture usage
-- Test animations at target framerate
-- Ensure proper UV mapping for all models
+#### Technical Standards
+- All buildings export as .glb with embedded textures
+- Animation frame rate: 30 FPS
+- Proper pivot points for rotation and scaling
+- Efficient polygon usage within specified limits
 
-This animation system provides rich visual feedback to players and enhances the overall game experience through expressive character movement and actions.
+This enhanced building system provides rich visual feedback, diverse strategic options, and immersive base-building gameplay through detailed 3D models and comprehensive animation systems.
