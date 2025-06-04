@@ -21,7 +21,7 @@ impl AudioManager {
         if let Some(sound) = resource_manager.get_sound("button_click") {
             let volume = if game_state.sound_muted { 0.0 } else { game_state.sound_volume };
             play_sound(
-                *sound,
+                sound,
                 PlaySoundParams {
                     looped: false,
                     volume,
@@ -34,7 +34,7 @@ impl AudioManager {
         if let Some(sound) = resource_manager.get_sound("unit_select") {
             let volume = if game_state.sound_muted { 0.0 } else { game_state.sound_volume };
             play_sound(
-                *sound,
+                sound,
                 PlaySoundParams {
                     looped: false,
                     volume,
@@ -47,7 +47,7 @@ impl AudioManager {
         if let Some(sound) = resource_manager.get_sound("building_place") {
             let volume = if game_state.sound_muted { 0.0 } else { game_state.sound_volume };
             play_sound(
-                *sound,
+                sound,
                 PlaySoundParams {
                     looped: false,
                     volume,
@@ -68,7 +68,7 @@ impl AudioManager {
         if let Some(music) = resource_manager.get_music(music_name) {
             let volume = if game_state.music_muted { 0.0 } else { game_state.music_volume };
             play_sound(
-                *music,
+                music,
                 PlaySoundParams {
                     looped: true,
                     volume,

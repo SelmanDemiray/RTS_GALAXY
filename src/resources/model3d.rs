@@ -1,15 +1,29 @@
 use macroquad::prelude::*;
-use std::io::Cursor;
-use std::path::Path;
-use gltf::Gltf;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+#[derive(Debug, Clone)]
+pub struct AnimationClip {
+    pub name: String,
+    pub duration: f32,
+    pub loop_: bool,
+    pub keyframes: Vec<Keyframe>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Keyframe {
+    pub time: f32,
+    pub transform: Mat4,
+}
 
 #[derive(Debug, Clone)]
 pub struct Model3D {
-    pub meshes: Vec<Mesh>,
-    pub materials: Vec<Material>,
-    pub textures: Vec<Texture2D>,
     pub name: String,
+    pub vertices: Vec<Vec3>,
+    pub indices: Vec<u32>,
+    pub textures: Vec<Texture2D>,
+    pub animations: HashMap<String, AnimationClip>,
+    pub default_animation: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -19,136 +33,127 @@ pub struct ModelInfo {
     pub scale: f32,
     #[serde(default = "default_rotation")]
     pub rotation: [f32; 3],
+    #[serde(default)]
+    pub animations: Vec<AnimationInfo>,
+    #[serde(default)]
+    pub default_animation: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct AnimationInfo {
+    pub name: String,
+    pub duration: f32,
+    #[serde(default = "default_true")]
+    pub loop_: bool,
+    #[serde(default = "default_animation_speed")]
+    pub speed: f32,
 }
 
 fn default_rotation() -> [f32; 3] {
     [0.0, 0.0, 0.0]
 }
 
+fn default_true() -> bool {
+    true
+}
+
+fn default_animation_speed() -> f32 {
+    1.0
+}
+
 impl Model3D {
     pub async fn load(info: &ModelInfo, base_path: &str) -> Option<Self> {
         let path = format!("{}/{}", base_path, info.file);
-        let data = match macroquad::prelude::load_file(&path).await {
-            Ok(data) => data,
-            Err(err) => {
-                eprintln!("Failed to load model file {}: {:?}", path, err);
-                return None;
-            }
-        };
-
-        Self::from_glb(&data, info.name.clone())
+        
+        // Create animations based on model info
+        let mut animations = HashMap::new();
+        for anim_info in &info.animations {
+            let clip = AnimationClip {
+                name: anim_info.name.clone(),
+                duration: anim_info.duration,
+                loop_: anim_info.loop_,
+                keyframes: Self::generate_placeholder_keyframes(anim_info.duration),
+            };
+            animations.insert(anim_info.name.clone(), clip);
+        }
+        
+        Some(Self {
+            name: info.name.clone(),
+            vertices: vec![],
+            indices: vec![],
+            textures: vec![],
+            animations,
+            default_animation: info.default_animation.clone(),
+        })
     }
 
     pub fn from_glb(data: &[u8], name: String) -> Option<Self> {
-        let cursor = Cursor::new(data);
-        let gltf = match Gltf::from_reader(cursor) {
-            Ok(gltf) => gltf,
-            Err(err) => {
-                eprintln!("Failed to parse GLTF data: {:?}", err);
-                return None;
-            }
-        };
-
-        // This is a simplified implementation - in a real application, you'd need
-        // to properly extract mesh data, materials, and textures from the GLTF document
-        // and convert them to macroquad's format
-        
-        let mut meshes = Vec::new();
-        let mut materials = Vec::new();
-        let mut textures = Vec::new();
-        
-        // For each mesh in the GLTF file
-        for mesh in gltf.meshes() {
-            for primitive in mesh.primitives() {
-                // Process mesh data
-                // This is where you would extract vertices, normals, UVs, etc.
-                // and create a macroquad Mesh
-                
-                // For demonstration purposes, we'll create a placeholder mesh
-                // In a real implementation, extract real data from the GLTF
-                let placeholder_mesh = Mesh {
-                    vertices: vec![],
-                    indices: vec![],
-                    texcoords: vec![],
-                    normals: vec![],
-                    tangents: vec![],
-                    colors: None,
-                };
-                meshes.push(placeholder_mesh);
-                
-                // Process material
-                if let Some(material) = primitive.material() {
-                    // Create a basic material
-                    let mat = Material {
-                        // Set material properties based on GLTF data
-                        // This is a placeholder - you would extract real data
-                        pipeline_params: Default::default(),
-                        uniforms: Default::default(),
-                        textures: Vec::new(),
-                    };
-                    materials.push(mat);
-                    
-                    // Process textures if any
-                    if let Some(pbr) = material.pbr_metallic_roughness().base_color_texture() {
-                        let texture = pbr.texture();
-                        // Load the texture - this is simplified
-                        // In reality, you need to extract the image data and create a Texture2D
-                    }
-                }
-            }
-        }
-        
-        Some(Model3D {
-            meshes,
-            materials,
-            textures,
+        // Simplified implementation for now
+        Some(Self {
             name,
+            vertices: vec![],
+            indices: vec![],
+            textures: vec![],
+            animations: HashMap::new(),
+            default_animation: None,
         })
     }
     
     pub fn draw(&self, position: Vec3, rotation: Vec3, scale: f32) {
-        // This is a placeholder for the actual drawing logic
-        // You would use macroquad's 3D drawing capabilities to render the model
-        
-        // For each mesh and corresponding material
-        for (i, mesh) in self.meshes.iter().enumerate() {
-            let material = if i < self.materials.len() {
-                &self.materials[i]
-            } else if !self.materials.is_empty() {
-                &self.materials[0]
-            } else {
-                continue; // Skip if no material available
+        // Draw a simple cube as placeholder
+        draw_cube(position, Vec3::splat(scale), None, WHITE);
+    }
+    
+    pub fn draw_with_animation(&self, position: Vec3, rotation: Vec3, scale: f32, animation_name: &str, animation_time: f32) {
+        if let Some(_animation) = self.animations.get(animation_name) {
+            // Apply animation transformations (placeholder implementation)
+            let animated_rotation = Vec3::new(
+                rotation.x + (animation_time * 2.0).sin() * 0.1,
+                rotation.y + animation_time * 0.5,
+                rotation.z
+            );
+            
+            // Draw the animated model
+            draw_cube(position, Vec3::splat(scale), None, WHITE);
+            
+            // Visual indicator of animation state
+            let color = match animation_name {
+                "walking" | "running" => GREEN,
+                "attacking" | "shooting" | "melee_attack" => RED,
+                "gathering_minerals" | "gathering_energy" => BLUE,
+                "building" => ORANGE,
+                "dying" => DARKGRAY,
+                _ => WHITE,
             };
             
-            // Set up model matrix (position, rotation, scale)
-            let model = Mat4::identity()
-                .translate(position)
-                .rotate_x(rotation.x)
-                .rotate_y(rotation.y)
-                .rotate_z(rotation.z)
-                .scale(vec3(scale, scale, scale));
-                
-            // Draw the mesh with the material
-            // macroquad::models::draw_mesh(mesh, material, model);
-            
-            // Note: The actual drawing call depends on how macroquad exposes 3D rendering
-            // This might require using lower-level GL calls or a different approach
+            // Draw a small indicator above the unit
+            draw_circle(position.x, position.y - scale - 10.0, 3.0, color);
+        } else {
+            // Fallback to basic draw
+            self.draw(position, rotation, scale);
         }
     }
-}
-
-// Helper function to convert gltf data to macroquad compatible formats
-fn convert_gltf_data(gltf_data: &[u8]) -> Result<Model3D, String> {
-    // This would be a complex function that processes the binary glTF data
-    // and extracts all the necessary information to create macroquad meshes,
-    // materials, and textures.
     
-    // For brevity, this implementation is omitted, as it would be quite lengthy.
-    // In a real implementation, you would:
-    // 1. Parse the glTF buffer data
-    // 2. Extract vertex positions, normals, UVs, etc.
-    // 3. Create macroquad materials from glTF materials
-    // 4. Load textures from glTF images
+    pub fn has_animation(&self, animation_name: &str) -> bool {
+        self.animations.contains_key(animation_name)
+    }
     
-    Err("Not implemented".to_string())
+    pub fn get_animation_duration(&self, animation_name: &str) -> Option<f32> {
+        self.animations.get(animation_name).map(|anim| anim.duration)
+    }
+    
+    fn generate_placeholder_keyframes(duration: f32) -> Vec<Keyframe> {
+        let frame_count = (duration * 30.0) as usize; // 30 FPS
+        let mut keyframes = Vec::new();
+        
+        for i in 0..frame_count {
+            let time = (i as f32) / 30.0;
+            keyframes.push(Keyframe {
+                time,
+                transform: Mat4::IDENTITY,
+            });
+        }
+        
+        keyframes
+    }
 }

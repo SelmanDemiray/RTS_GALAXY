@@ -81,7 +81,7 @@ fn draw_resource_node(node: &crate::game::resources::ResourceNode, camera_x: f32
     }
 }
 
-fn draw_unit(unit: &crate::entity::Unit, camera_x: f32, camera_y: f32, _resource_manager: &ResourceManager, game_state: &GameState) {
+fn draw_unit(unit: &crate::entity::Unit, camera_x: f32, camera_y: f32, resource_manager: &ResourceManager, game_state: &GameState) {
     let screen_x = unit.x - camera_x;
     let screen_y = unit.y - camera_y;
     
@@ -89,30 +89,95 @@ fn draw_unit(unit: &crate::entity::Unit, camera_x: f32, camera_y: f32, _resource
     if screen_x > -50.0 && screen_x < screen_width() + 50.0 && 
        screen_y > -50.0 && screen_y < screen_height() + 50.0 {
         
-        // Choose color based on unit type and player
-        let base_color = if unit.player_id == game_state.current_player_id {
-            BLUE
+        // Get model from resource manager
+        let model_name = match unit.unit_type {
+            crate::entity::UnitType::Worker => "worker",
+            crate::entity::UnitType::Fighter => "fighter",
+            crate::entity::UnitType::Ranger => "ranger",
+            crate::entity::UnitType::Tank => "tank",
+            crate::entity::UnitType::Building => "building",
+            crate::entity::UnitType::Headquarters => "headquarters",
+        };
+        
+        if let Some(model) = resource_manager.get_model(model_name) {
+            // Determine animation name based on unit state
+            let animation_name = match unit.animation.current_state {
+                crate::entity::UnitAnimationState::Idle => "idle",
+                crate::entity::UnitAnimationState::Walking => "walking",
+                crate::entity::UnitAnimationState::Running => "running",
+                crate::entity::UnitAnimationState::Attacking => {
+                    match unit.unit_type {
+                        crate::entity::UnitType::Fighter => "melee_attack",
+                        crate::entity::UnitType::Ranger => "shooting",
+                        crate::entity::UnitType::Tank => "firing_cannon",
+                        _ => "attacking",
+                    }
+                },
+                crate::entity::UnitAnimationState::Gathering => {
+                    if unit.current_resources.unwrap_or(0) > 0 {
+                        "carrying_resources"
+                    } else {
+                        "gathering_minerals" // Default, could be determined by target
+                    }
+                },
+                crate::entity::UnitAnimationState::Building => "building",
+                crate::entity::UnitAnimationState::Dying => "dying",
+                crate::entity::UnitAnimationState::Special => {
+                    match unit.unit_type {
+                        crate::entity::UnitType::Fighter => "victory_pose",
+                        crate::entity::UnitType::Ranger => "reloading",
+                        _ => "idle",
+                    }
+                },
+            };
+            
+            // Draw the 3D model with animation
+            let position = Vec3::new(screen_x, screen_y, 0.0);
+            let rotation = Vec3::new(0.0, unit.facing_direction, 0.0);
+            let scale = match unit.unit_type {
+                crate::entity::UnitType::Worker => 15.0,
+                crate::entity::UnitType::Fighter => 18.0,
+                crate::entity::UnitType::Ranger => 16.0,
+                crate::entity::UnitType::Tank => 25.0,
+                crate::entity::UnitType::Building => 40.0,
+                crate::entity::UnitType::Headquarters => 50.0,
+            };
+            
+            model.draw_with_animation(position, rotation, scale, animation_name, unit.animation.animation_time);
         } else {
-            RED
-        };
-        
-        let size = match unit.unit_type {
-            UnitType::Worker => 15.0,
-            UnitType::Fighter => 18.0,
-            UnitType::Ranger => 16.0,
-            UnitType::Tank => 25.0,
-            UnitType::Building => 40.0,
-            UnitType::Headquarters => 50.0,
-        };
-        
-        // Draw unit
-        draw_circle(screen_x, screen_y, size, base_color);
+            // Fallback to simple circle rendering
+            let base_color = if unit.player_id == game_state.current_player_id {
+                BLUE
+            } else {
+                RED
+            };
+            
+            let size = match unit.unit_type {
+                crate::entity::UnitType::Worker => 15.0,
+                crate::entity::UnitType::Fighter => 18.0,
+                crate::entity::UnitType::Ranger => 16.0,
+                crate::entity::UnitType::Tank => 25.0,
+                crate::entity::UnitType::Building => 40.0,
+                crate::entity::UnitType::Headquarters => 50.0,
+            };
+            
+            draw_circle(screen_x, screen_y, size, base_color);
+        }
         
         // Draw health bar if unit is damaged
         if unit.health < unit.max_health {
+            let size = match unit.unit_type {
+                crate::entity::UnitType::Worker => 15.0,
+                crate::entity::UnitType::Fighter => 18.0,
+                crate::entity::UnitType::Ranger => 16.0,
+                crate::entity::UnitType::Tank => 25.0,
+                crate::entity::UnitType::Building => 40.0,
+                crate::entity::UnitType::Headquarters => 50.0,
+            };
+            
             let bar_width = size * 2.0;
             let bar_height = 4.0;
-            let health_ratio = unit.health as f32 / unit.max_health as f32;
+            let health_ratio = unit.health / unit.max_health;
             
             // Background
             draw_rectangle(screen_x - bar_width/2.0, screen_y - size - 10.0, bar_width, bar_height, RED);
@@ -121,7 +186,7 @@ fn draw_unit(unit: &crate::entity::Unit, camera_x: f32, camera_y: f32, _resource
         }
         
         // Draw resource carrying indicator for workers
-        if unit.unit_type == UnitType::Worker {
+        if unit.unit_type == crate::entity::UnitType::Worker {
             if let Some(resources) = unit.current_resources {
                 if resources > 0 {
                     draw_circle(screen_x + 8.0, screen_y - 8.0, 4.0, GOLD);

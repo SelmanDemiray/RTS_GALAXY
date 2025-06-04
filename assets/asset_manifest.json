@@ -1,33 +1,198 @@
 {
   "models": {
     "units": [
-      {"name": "worker", "file": "models/units/worker.glb", "scale": 1.0},
-      {"name": "fighter", "file": "models/units/fighter.glb", "scale": 1.0},
-      {"name": "ranger", "file": "models/units/ranger.glb", "scale": 1.0},
-      {"name": "tank", "file": "models/units/tank.glb", "scale": 1.2}
+      {
+        "name": "worker", 
+        "file": "models/units/worker.glb", 
+        "scale": 1.0,
+        "default_animation": "idle",
+        "animations": [
+          {"name": "idle", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "walking", "duration": 1.0, "loop": true, "speed": 1.0},
+          {"name": "gathering_minerals", "duration": 1.5, "loop": true, "speed": 1.0},
+          {"name": "gathering_energy", "duration": 1.5, "loop": true, "speed": 1.0},
+          {"name": "building", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "carrying_resources", "duration": 1.2, "loop": true, "speed": 1.0},
+          {"name": "dying", "duration": 1.2, "loop": false, "speed": 1.0}
+        ]
+      },
+      {
+        "name": "fighter", 
+        "file": "models/units/fighter.glb", 
+        "scale": 1.0,
+        "default_animation": "idle",
+        "animations": [
+          {"name": "idle", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "walking", "duration": 1.0, "loop": true, "speed": 1.0},
+          {"name": "running", "duration": 0.8, "loop": true, "speed": 1.2},
+          {"name": "melee_attack", "duration": 0.6, "loop": false, "speed": 1.5},
+          {"name": "blocking", "duration": 1.0, "loop": true, "speed": 1.0},
+          {"name": "victory_pose", "duration": 2.0, "loop": false, "speed": 1.0},
+          {"name": "dying", "duration": 1.2, "loop": false, "speed": 1.0}
+        ]
+      },
+      {
+        "name": "ranger", 
+        "file": "models/units/ranger.glb", 
+        "scale": 1.0,
+        "default_animation": "idle",
+        "animations": [
+          {"name": "idle", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "walking", "duration": 1.0, "loop": true, "speed": 1.0},
+          {"name": "running", "duration": 0.8, "loop": true, "speed": 1.2},
+          {"name": "aiming", "duration": 0.5, "loop": true, "speed": 1.0},
+          {"name": "shooting", "duration": 0.4, "loop": false, "speed": 1.5},
+          {"name": "reloading", "duration": 1.0, "loop": false, "speed": 1.0},
+          {"name": "dying", "duration": 1.2, "loop": false, "speed": 1.0}
+        ]
+      },
+      {
+        "name": "tank", 
+        "file": "models/units/tank.glb", 
+        "scale": 1.2,
+        "default_animation": "idle",
+        "animations": [
+          {"name": "idle", "duration": 3.0, "loop": true, "speed": 0.8},
+          {"name": "walking", "duration": 1.5, "loop": true, "speed": 0.8},
+          {"name": "turret_rotate", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "firing_cannon", "duration": 1.0, "loop": false, "speed": 1.0},
+          {"name": "damaged_idle", "duration": 3.0, "loop": true, "speed": 0.6},
+          {"name": "dying", "duration": 2.0, "loop": false, "speed": 0.8}
+        ]
+      }
     ],
     "buildings": [
-      {"name": "headquarters", "file": "models/buildings/headquarters.glb", "scale": 2.0},
-      {"name": "barracks", "file": "models/buildings/barracks.glb", "scale": 1.8},
-      {"name": "factory", "file": "models/buildings/factory.glb", "scale": 1.8},
-      {"name": "resource_depot", "file": "models/buildings/resource_depot.glb", "scale": 1.8},
-      {"name": "defense_turret", "file": "models/buildings/defense_turret.glb", "scale": 1.2}
+      {
+        "name": "headquarters", 
+        "file": "models/buildings/headquarters.glb", 
+        "scale": 2.0,
+        "default_animation": "idle",
+        "animations": [
+          {"name": "idle", "duration": 4.0, "loop": true, "speed": 1.0},
+          {"name": "production", "duration": 3.0, "loop": true, "speed": 1.0},
+          {"name": "damaged", "duration": 2.0, "loop": true, "speed": 0.8},
+          {"name": "upgrading", "duration": 5.0, "loop": true, "speed": 1.0}
+        ]
+      },
+      {
+        "name": "barracks", 
+        "file": "models/buildings/barracks.glb", 
+        "scale": 1.8,
+        "default_animation": "idle",
+        "animations": [
+          {"name": "idle", "duration": 3.0, "loop": true, "speed": 1.0},
+          {"name": "construction", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "working", "duration": 2.5, "loop": true, "speed": 1.0},
+          {"name": "damaged", "duration": 2.0, "loop": true, "speed": 0.8}
+        ]
+      },
+      {
+        "name": "factory", 
+        "file": "models/buildings/factory.glb", 
+        "scale": 1.8,
+        "default_animation": "idle",
+        "animations": [
+          {"name": "idle", "duration": 3.0, "loop": true, "speed": 1.0},
+          {"name": "construction", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "working", "duration": 2.5, "loop": true, "speed": 1.0},
+          {"name": "damaged", "duration": 2.0, "loop": true, "speed": 0.8}
+        ]
+      },
+      {
+        "name": "resource_depot", 
+        "file": "models/buildings/resource_depot.glb", 
+        "scale": 1.8,
+        "default_animation": "idle",
+        "animations": [
+          {"name": "idle", "duration": 3.0, "loop": true, "speed": 1.0},
+          {"name": "construction", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "working", "duration": 2.5, "loop": true, "speed": 1.0},
+          {"name": "damaged", "duration": 2.0, "loop": true, "speed": 0.8}
+        ]
+      },
+      {
+        "name": "defense_turret", 
+        "file": "models/buildings/defense_turret.glb", 
+        "scale": 1.2,
+        "default_animation": "idle",
+        "animations": [
+          {"name": "idle", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "construction", "duration": 2.0, "loop": true, "speed": 1.0},
+          {"name": "working", "duration": 1.0, "loop": true, "speed": 1.5},
+          {"name": "damaged", "duration": 2.0, "loop": true, "speed": 0.8}
+        ]
+      }
     ],
     "resources": [
-      {"name": "minerals", "file": "models/resources/minerals.glb", "scale": 1.0},
-      {"name": "energy", "file": "models/resources/energy.glb", "scale": 1.0}
+      {
+        "name": "minerals", 
+        "file": "models/resources/minerals.glb", 
+        "scale": 1.0,
+        "default_animation": "idle",
+        "animations": [
+          {"name": "idle", "duration": 5.0, "loop": true, "speed": 0.5}
+        ]
+      },
+      {
+        "name": "energy", 
+        "file": "models/resources/energy.glb", 
+        "scale": 1.0,
+        "default_animation": "idle",
+        "animations": [
+          {"name": "idle", "duration": 3.0, "loop": true, "speed": 1.0}
+        ]
+      }
     ],
     "terrain": [
-      {"name": "grass_tile", "file": "models/terrain/grass_tile.glb", "scale": 1.0},
-      {"name": "dirt_tile", "file": "models/terrain/dirt_tile.glb", "scale": 1.0}
+      {
+        "name": "grass_tile", 
+        "file": "models/terrain/grass_tile.glb", 
+        "scale": 1.0,
+        "animations": []
+      },
+      {
+        "name": "dirt_tile", 
+        "file": "models/terrain/dirt_tile.glb", 
+        "scale": 1.0,
+        "animations": []
+      }
     ],
     "props": [
-      {"name": "obstacle_rock", "file": "models/props/obstacle_rock.glb", "scale": 1.0},
-      {"name": "obstacle_tree", "file": "models/props/obstacle_tree.glb", "scale": 1.0}
+      {
+        "name": "obstacle_rock", 
+        "file": "models/props/obstacle_rock.glb", 
+        "scale": 1.0,
+        "animations": []
+      },
+      {
+        "name": "obstacle_tree", 
+        "file": "models/props/obstacle_tree.glb", 
+        "scale": 1.0,
+        "default_animation": "sway",
+        "animations": [
+          {"name": "sway", "duration": 4.0, "loop": true, "speed": 0.8}
+        ]
+      }
     ],
     "effects": [
-      {"name": "explosion", "file": "models/effects/explosion.glb", "scale": 1.0},
-      {"name": "impact_hit", "file": "models/effects/impact_hit.glb", "scale": 0.8}
+      {
+        "name": "explosion", 
+        "file": "models/effects/explosion.glb", 
+        "scale": 1.0,
+        "default_animation": "explode",
+        "animations": [
+          {"name": "explode", "duration": 1.0, "loop": false, "speed": 1.0}
+        ]
+      },
+      {
+        "name": "impact_hit", 
+        "file": "models/effects/impact_hit.glb", 
+        "scale": 0.8,
+        "default_animation": "impact",
+        "animations": [
+          {"name": "impact", "duration": 0.5, "loop": false, "speed": 1.5}
+        ]
+      }
     ]
   },
   "textures": {

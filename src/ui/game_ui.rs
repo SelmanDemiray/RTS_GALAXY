@@ -1,7 +1,8 @@
 use macroquad::prelude::*;
+use macroquad::ui::{hash, root_ui, widgets};
 use crate::game::{GameState, GameMode};
 use crate::game::screens::GameScreen;
-use crate::network::NetworkClient; // Fixed import
+use crate::network::NetworkClient;
 use crate::resources::manager::ResourceManager;
 use crate::audio::AudioManager;
 use crate::entity::{BuildingType, UnitType};
@@ -120,93 +121,90 @@ pub fn draw_ui(
     let zoom_indicator = format!("Zoom Level: {}/50", game_state.zoom_system.current_level);
     draw_text(&zoom_indicator, 10.0, screen_height() - 50.0, 16.0, WHITE);
     
-    egui_macroquad::ui(|egui_ctx| {
-        // Enhanced Command Panel with zoom-aware controls
-        egui_macroquad::egui::Window::new("Commands").show(egui_ctx, |ui| {
-            if !game_state.selected_units.is_empty() {
-                if ui.button("Build Barracks").clicked() {
-                    audio_manager.play_ui_click(resource_manager, game_state);
-                    game_state.current_command = Some(Command::Build { 
-                        building_type: BuildingType::Barracks,
-                        x: 0.0,
-                        y: 0.0 
-                    });
-                }
-                if ui.button("Gather Resources").clicked() {
-                    audio_manager.play_ui_click(resource_manager, game_state);
-                    game_state.current_command = Some(Command::Gather { resource_id: 0 });
-                }
+    // Replace egui_macroquad with macroquad native UI
+    root_ui().window(hash!(), vec2(10.0, 120.0), vec2(200.0, 150.0), |ui| {
+        ui.label(None, "Commands");
+        if !game_state.selected_units.is_empty() {
+            if ui.button(None, "Build Barracks") {
+                audio_manager.play_ui_click(resource_manager, game_state);
+                game_state.current_command = Some(Command::Build { 
+                    building_type: BuildingType::Barracks,
+                    x: 0.0,
+                    y: 0.0 
+                });
+            }
+            if ui.button(None, "Gather Resources") {
+                audio_manager.play_ui_click(resource_manager, game_state);
+                game_state.current_command = Some(Command::Gather { resource_id: 0 });
+            }
+        }
+    });
+
+    // Zoom Control Panel
+    root_ui().window(hash!(), vec2(220.0, 120.0), vec2(200.0, 200.0), |ui| {
+        ui.label(None, &format!("Zoom Level: {}/50", game_state.zoom_system.current_level));
+        
+        ui.horizontal(|ui| {
+            if ui.button(None, "Zoom In (+)") && game_state.zoom_system.current_level > 1 {
+                game_state.zoom_system.zoom_in();
+            }
+            if ui.button(None, "Zoom Out (-)") && game_state.zoom_system.current_level < 50 {
+                game_state.zoom_system.zoom_out();
+            }
+            if ui.button(None, "Home (H)") {
+                let home_pos = game_state.zoom_system.go_home();
+                game_state.camera_x = home_pos.x;
+                game_state.camera_y = home_pos.y;
             }
         });
-
-        // Zoom Control Panel
-        egui_macroquad::egui::Window::new("Zoom Controls").show(egui_ctx, |ui| {
-            ui.label(format!("Current Level: {}/50", game_state.zoom_system.current_level));
-            
-            ui.horizontal(|ui| {
-                if ui.button("Zoom In (+)").clicked() && game_state.zoom_system.current_level > 1 {
-                    game_state.zoom_system.zoom_in();
-                }
-                if ui.button("Zoom Out (-)").clicked() && game_state.zoom_system.current_level < 50 {
-                    game_state.zoom_system.zoom_out();
-                }
-                if ui.button("Home (H)").clicked() {
-                    let home_pos = game_state.zoom_system.go_home();
-                    game_state.camera_x = home_pos.x;
-                    game_state.camera_y = home_pos.y;
-                }
-            });
-            
-            ui.separator();
-            ui.label("Quick Zoom (1-9):");
-            ui.horizontal(|ui| {
-                if ui.small_button("1: Unit").clicked() { game_state.zoom_system.set_zoom_level(1); }
-                if ui.small_button("2: Village").clicked() { game_state.zoom_system.set_zoom_level(5); }
-                if ui.small_button("3: City").clicked() { game_state.zoom_system.set_zoom_level(10); }
-                if ui.small_button("4: Region").clicked() { game_state.zoom_system.set_zoom_level(15); }
-            });
-            ui.horizontal(|ui| {
-                if ui.small_button("5: Planet").clicked() { game_state.zoom_system.set_zoom_level(20); }
-                if ui.small_button("6: System").clicked() { game_state.zoom_system.set_zoom_level(25); }
-                if ui.small_button("7: Cluster").clicked() { game_state.zoom_system.set_zoom_level(30); }
-                if ui.small_button("8: Galaxy").clicked() { game_state.zoom_system.set_zoom_level(35); }
-            });
-            
-            ui.separator();
-            ui.label(game_state.zoom_system.get_zoom_description());
+        
+        ui.separator();
+        ui.label(None, "Quick Zoom:");
+        ui.horizontal(|ui| {
+            if ui.button(None, "1: Unit") { game_state.zoom_system.set_zoom_level(1); }
+            if ui.button(None, "2: Village") { game_state.zoom_system.set_zoom_level(5); }
+            if ui.button(None, "3: City") { game_state.zoom_system.set_zoom_level(10); }
+            if ui.button(None, "4: Region") { game_state.zoom_system.set_zoom_level(15); }
         });
+        ui.horizontal(|ui| {
+            if ui.button(None, "5: Planet") { game_state.zoom_system.set_zoom_level(20); }
+            if ui.button(None, "6: System") { game_state.zoom_system.set_zoom_level(25); }
+            if ui.button(None, "7: Cluster") { game_state.zoom_system.set_zoom_level(30); }
+            if ui.button(None, "8: Galaxy") { game_state.zoom_system.set_zoom_level(35); }
+        });
+        
+        ui.separator();
+        ui.label(None, &game_state.zoom_system.get_zoom_description());
+    });
 
-        // Unit Training Panel
-        egui_macroquad::egui::Window::new("Train Units").show(egui_ctx, |ui| {
-            if ui.button("Train Worker (50 minerals)").clicked() && game_state.can_afford(0, &UnitType::Worker) {
-                audio_manager.play_build_sound(resource_manager, game_state);
+    // Unit Training Panel
+    root_ui().window(hash!(), vec2(430.0, 120.0), vec2(180.0, 120.0), |ui| {
+        ui.label(None, "Train Units");
+        if ui.button(None, "Train Worker (50)") && game_state.can_afford(0, &UnitType::Worker) {
+            audio_manager.play_build_sound(resource_manager, game_state);
+            
+            // Find HQ position
+            if let Some(headquarters) = game_state.units.iter().find(|u| 
+                u.unit_type == UnitType::Headquarters && u.player_id == game_state.current_player_id) {
+                let hq_pos = (headquarters.x, headquarters.y);
+                let spawn_pos = (hq_pos.0 + 50.0, hq_pos.1 + 50.0);
                 
-                // Find HQ position
-                if let Some(headquarters) = game_state.units.iter().find(|u| 
-                    u.unit_type == UnitType::Headquarters && u.player_id == game_state.current_player_id) {
-                    let hq_pos = (headquarters.x, headquarters.y);
-                    let spawn_pos = (hq_pos.0 + 50.0, hq_pos.1 + 50.0);
-                    
-                    // Create worker and deduct cost
-                    game_state.spawn_unit(UnitType::Worker, spawn_pos.0, spawn_pos.1, game_state.current_player_id);
-                    game_state.deduct_cost(game_state.current_player_id as usize, &UnitType::Worker);
-                }
+                // Create worker and deduct cost
+                game_state.spawn_unit(UnitType::Worker, spawn_pos.0, spawn_pos.1, game_state.current_player_id);
+                game_state.deduct_cost(game_state.current_player_id as usize, &UnitType::Worker);
             }
-        });
+        }
+    });
 
-        // Combat Panel
-        egui_macroquad::egui::Window::new("Combat").show(egui_ctx, |ui| {
-            if !game_state.selected_units.is_empty() {
-                if ui.button("Attack").clicked() {
-                    audio_manager.play_ui_click(resource_manager, game_state);
-                    game_state.current_command = Some(Command::Attack { target_id: 0 });
-                }
-                if ui.button("Stop").clicked() {
-                    audio_manager.play_ui_click(resource_manager, game_state);
-                    game_state.current_command = Some(Command::Stop);
-                }
+    // Combat Panel
+    root_ui().window(hash!(), vec2(620.0, 120.0), vec2(150.0, 100.0), |ui| {
+        ui.label(None, "Combat");
+        if !game_state.selected_units.is_empty() {
+            if ui.button(None, "Attack Move") {
+                audio_manager.play_ui_click(resource_manager, game_state);
+                game_state.current_command = Some(Command::Attack { target_id: 0 });
             }
-        });
+        }
     });
 }
 
@@ -292,13 +290,7 @@ fn draw_unit_info(
                     
                     if draw_button(button_start_x + button_width + button_spacing, button_y, button_width, button_height, "Stop") {
                         audio_manager.play_ui_click(resource_manager, game_state);
-                        // Clear target for all selected units
-                        for &unit_id in &game_state.selected_units {
-                            if let Some(unit) = game_state.units.iter_mut().find(|u| u.id == unit_id) {
-                                unit.target_x = None;
-                                unit.target_y = None;
-                            }
-                        }
+                        game_state.current_command = Some(Command::Stop);
                     }
                 }
             }

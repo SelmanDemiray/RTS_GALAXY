@@ -1,12 +1,12 @@
-# 3D Game Assets
+# 3D Game Assets with Animation System
 
-This directory contains all 3D models and media assets for the RTS game, organized by type.
+This directory contains all 3D models and media assets for the RTS game, organized by type. Each unit and building includes specific animations for enhanced visual feedback.
 
 ## Directory Structure
 
 - **models/**
-  - **units/**: 3D models for units (.glb format)
-  - **buildings/**: 3D models for buildings (.glb format)
+  - **units/**: 3D models for units (.glb format) with animations
+  - **buildings/**: 3D models for buildings (.glb format) with animations
   - **resources/**: 3D models for resource nodes (.glb format)
   - **terrain/**: 3D terrain models and elements (.glb format)
   - **props/**: 3D models for props and decorations (.glb format)
@@ -17,71 +17,106 @@ This directory contains all 3D models and media assets for the RTS game, organiz
 - **music/**: Background music files (.ogg format)
 - **fonts/**: Game fonts (.ttf format)
 
-## 3D Models List
+## Animation System
 
-### Units
-| Filename | Format | Description | Recommended Scale |
-|----------|--------|-------------|------------------|
-| worker.glb | glTF Binary | Worker unit model | 1.0 |
-| fighter.glb | glTF Binary | Fighter unit model | 1.0 |
-| ranger.glb | glTF Binary | Ranger unit model | 1.0 |
-| tank.glb | glTF Binary | Tank unit model | 1.2 |
+Each unit type has specific animations that provide visual feedback for player actions:
 
-### Buildings
-| Filename | Format | Description | Recommended Scale |
-|----------|--------|-------------|------------------|
-| headquarters.glb | glTF Binary | Main base building | 2.0 |
-| barracks.glb | glTF Binary | Unit training building | 1.8 |
-| factory.glb | glTF Binary | Advanced unit building | 1.8 |
-| resource_depot.glb | glTF Binary | Resource storage | 1.8 |
-| defense_turret.glb | glTF Binary | Defensive structure | 1.2 |
-| building_construction.glb | glTF Binary | Building under construction | 1.8 |
+### Worker Unit Animations
+| Animation Name | Duration | Loop | Description | Triggered When |
+|----------------|----------|------|-------------|----------------|
+| idle | 2.0s | Yes | Standing still, breathing | No action |
+| walking | 1.0s | Yes | Basic movement | Moving to destination |
+| gathering_minerals | 1.5s | Yes | Mining/collecting crystals | At mineral node |
+| gathering_energy | 1.5s | Yes | Siphoning energy | At energy node |
+| building | 2.0s | Yes | Construction work | Building structures |
+| carrying_resources | 1.2s | Yes | Walking with resource load | Moving with resources |
+| dying | 1.2s | No | Death animation | Health reaches 0 |
 
-### Resources
-| Filename | Format | Description | Recommended Scale |
-|----------|--------|-------------|------------------|
-| minerals.glb | glTF Binary | Mineral resource node | 1.0 |
-| minerals_depleted.glb | glTF Binary | Depleted mineral node | 1.0 |
-| energy.glb | glTF Binary | Energy resource node | 1.0 |
-| energy_depleted.glb | glTF Binary | Depleted energy node | 1.0 |
+### Fighter Unit Animations
+| Animation Name | Duration | Loop | Description | Triggered When |
+|----------------|----------|------|-------------|----------------|
+| idle | 2.0s | Yes | Combat ready stance | No action |
+| walking | 1.0s | Yes | Marching movement | Moving slowly |
+| running | 0.8s | Yes | Quick movement | Moving at speed |
+| melee_attack | 0.6s | No | Sword/weapon swing | Attacking enemy |
+| blocking | 1.0s | Yes | Defensive posture | Under attack |
+| victory_pose | 2.0s | No | Celebration stance | After victory |
+| dying | 1.2s | No | Death animation | Health reaches 0 |
 
-### Terrain
-| Filename | Format | Description | Recommended Scale |
-|----------|--------|-------------|------------------|
-| grass_tile.glb | glTF Binary | Basic grass terrain | 1.0 |
-| dirt_tile.glb | glTF Binary | Dirt terrain | 1.0 |
-| sand_tile.glb | glTF Binary | Sand terrain | 1.0 |
-| rock_tile.glb | glTF Binary | Rocky terrain | 1.0 |
-| water_tile.glb | glTF Binary | Water terrain | 1.0 |
+### Ranger Unit Animations
+| Animation Name | Duration | Loop | Description | Triggered When |
+|----------------|----------|------|-------------|----------------|
+| idle | 2.0s | Yes | Alert scanning stance | No action |
+| walking | 1.0s | Yes | Patrol movement | Moving slowly |
+| running | 0.8s | Yes | Quick reposition | Moving at speed |
+| aiming | 0.5s | Yes | Taking aim | Targeting enemy |
+| shooting | 0.4s | No | Firing weapon | Attacking enemy |
+| reloading | 1.0s | No | Weapon reload | After multiple shots |
+| dying | 1.2s | No | Death animation | Health reaches 0 |
 
-### Props
-| Filename | Format | Description | Recommended Scale |
-|----------|--------|-------------|------------------|
-| obstacle_rock.glb | glTF Binary | Rock obstacle | 1.0 |
-| obstacle_tree.glb | glTF Binary | Tree obstacle | 1.0 |
+### Tank Unit Animations
+| Animation Name | Duration | Loop | Description | Triggered When |
+|----------------|----------|------|-------------|----------------|
+| idle | 3.0s | Yes | Engine idling | No action |
+| walking | 1.5s | Yes | Tank movement | Moving |
+| turret_rotate | 2.0s | Yes | Turret turning | Targeting |
+| firing_cannon | 1.0s | No | Cannon blast | Attacking |
+| damaged_idle | 3.0s | Yes | Smoking/sparking | Below 50% health |
+| dying | 2.0s | No | Explosion sequence | Health reaches 0 |
 
-### Effects
-| Filename | Format | Description | Recommended Scale |
-|----------|--------|-------------|------------------|
-| explosion.glb | glTF Binary | Explosion animation | 1.0 |
-| laser_beam.glb | glTF Binary | Ranger attack effect | 1.0 |
-| impact_hit.glb | glTF Binary | Attack impact effect | 0.8 |
-| dust_cloud.glb | glTF Binary | Movement dust effect | 0.8 |
-| construction_effect.glb | glTF Binary | Building construction | 1.5 |
+### Building Animations
+| Animation Name | Duration | Loop | Description | Triggered When |
+|----------------|----------|------|-------------|----------------|
+| idle | 3-4s | Yes | Normal operation | Default state |
+| construction | 2.0s | Yes | Being built | Under construction |
+| working | 2.5s | Yes | Active production | Training units |
+| damaged | 2.0s | Yes | Smoking/fire | Below 50% health |
+| production | 3.0s | Yes | Manufacturing | Creating units (HQ) |
+| upgrading | 5.0s | Yes | Improvement work | During upgrades |
 
-### UI Elements (2D)
-| Filename | Type | Description | Size |
-|----------|------|-------------|------|
-| button_normal.png | PNG | Standard button | 196×64 |
-| button_hover.png | PNG | Button hover state | 196×64 |
-| button_pressed.png | PNG | Button pressed state | 196×64 |
-| panel_background.png | PNG | UI panel background | 512×512 |
-| minimap_frame.png | PNG | Minimap border | 256×256 |
-| selection_circle.png | PNG | Unit selection indicator | 128×128 |
-| health_bar_frame.png | PNG | Health bar container | 64×16 |
-| health_bar_fill.png | PNG | Health bar fill | 60×12 |
-| resource_icon_minerals.png | PNG | Minerals UI icon | 32×32 |
-| resource_icon_energy.png | PNG | Energy UI icon | 32×32 |
+## Creating Animated Models in Blender
+
+### Animation Requirements
+1. **Frame Rate**: 30 FPS for all animations
+2. **Bone Setup**: Use armatures for character animations
+3. **Animation Naming**: Exact names as specified in tables above
+4. **Root Motion**: Keep root bone at origin for position control
+5. **Loop Compatibility**: Ensure looping animations start/end seamlessly
+
+### Blender Animation Workflow
+1. Create base model with proper proportions
+2. Add armature with appropriate bone hierarchy
+3. Weight paint vertices to bones
+4. Create animation actions for each required animation
+5. Name actions exactly as specified in manifest
+6. Test loops and transitions
+7. Export with animations included
+
+### Export Settings for Animated Models
+- Format: glTF Binary (.glb)
+- Include: Selected Objects
+- Transform: Y Up
+- Geometry: Apply Modifiers: On
+- Animation: 
+  - Animation Mode: Actions
+  - Export all actions: On
+  - NLA Strips: Off
+  - Force Sample Animations: On
+  - Group by NLA Track: Off
+
+## Implementation
+
+To add new 3D assets:
+1. Create the model in Blender
+2. Export to .glb format
+3. Place the file in the appropriate models directory
+4. Update the asset manifest (see below)
+
+## Resource Manifest
+
+The `asset_manifest.json` file in this directory maintains a registry of all 
+game assets and their properties. When adding new assets, please update this
+file to ensure the ResourceManager properly loads them.
 
 ## Creating Models in Blender
 
@@ -111,16 +146,40 @@ When exporting from Blender to glTF:
   - Textures: On
   - Animations: On (for animated assets)
 
-## Implementation
+## Animation Integration
 
-To add new 3D assets:
-1. Create the model in Blender
-2. Export to .glb format
-3. Place the file in the appropriate models directory
-4. Update the asset manifest (see below)
+### Code Integration
+- Animations are loaded via `ResourceManager` from `asset_manifest.json`
+- Unit animation state is managed by `UnitAnimation` struct
+- Visual feedback provided through `Model3D.draw_with_animation()`
+- State transitions handled automatically based on unit actions
 
-## Resource Manifest
+### Performance Considerations
+- All animations are preloaded during game initialization
+- Animation blending provides smooth transitions
+- LOD system can disable animations at distant zoom levels
+- Animation culling for off-screen units
 
-The `asset_manifest.json` file in this directory maintains a registry of all 
-game assets and their properties. When adding new assets, please update this
-file to ensure the ResourceManager properly loads them.
+### Testing Animations
+1. Place units in-game
+2. Order various actions (move, attack, gather)
+3. Verify correct animations play
+4. Check animation loops are smooth
+5. Test state transitions
+6. Verify animation performance
+
+## Asset Creation Guidelines
+
+### Visual Consistency
+- Maintain consistent art style across all units
+- Use similar color palettes for faction identification
+- Ensure readable silhouettes at game camera distance
+- Test visibility at various zoom levels
+
+### Technical Standards
+- Keep polygon count within specified limits
+- Optimize texture usage
+- Test animations at target framerate
+- Ensure proper UV mapping for all models
+
+This animation system provides rich visual feedback to players and enhances the overall game experience through expressive character movement and actions.

@@ -8,7 +8,7 @@ pub enum NetworkMessage {
         units: Vec<Unit>,
         timestamp: f64,
     },
-    UnitUpdate {
+    UnitUpdateBasic {
         unit_id: u32,
         x: f32,
         y: f32,

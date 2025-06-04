@@ -1,14 +1,37 @@
 use macroquad::prelude::*;
+use serde::{Serialize, Deserialize};
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZoomSystem {
     pub current_level: i32,
     pub target_level: i32,
     pub interpolation_progress: f32,
     pub interpolation_speed: f32,
+    #[serde(with = "vec2_serde")]
     pub home_position: Vec2,
     pub base_scale: f64,
     pub zoom_factor: f64,
     pub max_level: i32,
+}
+
+mod vec2_serde {
+    use super::*;
+    use serde::{Deserializer, Serializer};
+
+    pub fn serialize<S>(vec: &Vec2, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        (vec.x, vec.y).serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec2, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let (x, y) = <(f32, f32)>::deserialize(deserializer)?;
+        Ok(Vec2::new(x, y))
+    }
 }
 
 impl ZoomSystem {
