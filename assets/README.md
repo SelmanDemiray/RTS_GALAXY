@@ -1,63 +1,75 @@
-# Game Assets
+# 3D Game Assets
 
-This directory contains all media assets for the RTS game, organized by type.
+This directory contains all 3D models and media assets for the RTS game, organized by type.
 
 ## Directory Structure
 
+- **models/**
+  - **units/**: 3D models for units (.glb format)
+  - **buildings/**: 3D models for buildings (.glb format)
+  - **resources/**: 3D models for resource nodes (.glb format)
+  - **terrain/**: 3D terrain models and elements (.glb format)
+  - **props/**: 3D models for props and decorations (.glb format)
+  - **effects/**: 3D models for visual effects (.glb format)
 - **textures/**
-  - **units/**: Unit sprites and animations
-  - **buildings/**: Building sprites
-  - **resources/**: Resource node graphics
-  - **terrain/**: Background textures and terrain elements
-  - **ui/**: Interface elements and icons
-  - **effects/**: Visual effects (explosions, magic, etc.)
+  - **ui/**: User interface elements and icons (2D)
 - **sounds/**: Sound effect files (.ogg or .wav format)
 - **music/**: Background music files (.ogg format)
 - **fonts/**: Game fonts (.ttf format)
-- **animations/**: Special animation sequences
 
-## Asset List
+## 3D Models List
 
 ### Units
-| Filename | Type | Description | Size |
-|----------|------|-------------|------|
-| worker.png | PNG | Worker unit sprite | 128×128 |
-| worker_selected.png | PNG | Selected worker highlight | 128×128 |
-| fighter.png | PNG | Fighter unit sprite | 128×128 |
-| ranger.png | PNG | Ranger unit sprite | 128×128 |
-| tank.png | PNG | Tank unit sprite | 128×128 |
-| unit_shadow.png | PNG | Shadow for all units | 64×64 |
+| Filename | Format | Description | Recommended Scale |
+|----------|--------|-------------|------------------|
+| worker.glb | glTF Binary | Worker unit model | 1.0 |
+| fighter.glb | glTF Binary | Fighter unit model | 1.0 |
+| ranger.glb | glTF Binary | Ranger unit model | 1.0 |
+| tank.glb | glTF Binary | Tank unit model | 1.2 |
 
 ### Buildings
-| Filename | Type | Description | Size |
-|----------|------|-------------|------|
-| headquarters.png | PNG | Main base building | 256×256 |
-| barracks.png | PNG | Unit training building | 192×192 |
-| factory.png | PNG | Advanced unit building | 192×192 |
-| resource_depot.png | PNG | Resource storage | 192×192 |
-| defense_turret.png | PNG | Defensive structure | 128×128 |
-| building_construction.png | PNG | Building under construction | 192×192 |
+| Filename | Format | Description | Recommended Scale |
+|----------|--------|-------------|------------------|
+| headquarters.glb | glTF Binary | Main base building | 2.0 |
+| barracks.glb | glTF Binary | Unit training building | 1.8 |
+| factory.glb | glTF Binary | Advanced unit building | 1.8 |
+| resource_depot.glb | glTF Binary | Resource storage | 1.8 |
+| defense_turret.glb | glTF Binary | Defensive structure | 1.2 |
+| building_construction.glb | glTF Binary | Building under construction | 1.8 |
 
 ### Resources
-| Filename | Type | Description | Size |
-|----------|------|-------------|------|
-| minerals.png | PNG | Mineral resource node | 128×128 |
-| minerals_depleted.png | PNG | Depleted mineral node | 128×128 |
-| energy.png | PNG | Energy resource node | 128×128 |
-| energy_depleted.png | PNG | Depleted energy node | 128×128 |
+| Filename | Format | Description | Recommended Scale |
+|----------|--------|-------------|------------------|
+| minerals.glb | glTF Binary | Mineral resource node | 1.0 |
+| minerals_depleted.glb | glTF Binary | Depleted mineral node | 1.0 |
+| energy.glb | glTF Binary | Energy resource node | 1.0 |
+| energy_depleted.glb | glTF Binary | Depleted energy node | 1.0 |
 
 ### Terrain
-| Filename | Type | Description | Size |
-|----------|------|-------------|------|
-| grass_tile.png | PNG | Basic grass terrain | 128×128 |
-| dirt_tile.png | PNG | Dirt terrain | 128×128 |
-| sand_tile.png | PNG | Sand terrain | 128×128 |
-| rock_tile.png | PNG | Rocky terrain | 128×128 |
-| water_tile.png | PNG | Water terrain | 128×128 |
-| obstacle_rock.png | PNG | Rock obstacle | 128×128 |
-| obstacle_tree.png | PNG | Tree obstacle | 128×128 |
+| Filename | Format | Description | Recommended Scale |
+|----------|--------|-------------|------------------|
+| grass_tile.glb | glTF Binary | Basic grass terrain | 1.0 |
+| dirt_tile.glb | glTF Binary | Dirt terrain | 1.0 |
+| sand_tile.glb | glTF Binary | Sand terrain | 1.0 |
+| rock_tile.glb | glTF Binary | Rocky terrain | 1.0 |
+| water_tile.glb | glTF Binary | Water terrain | 1.0 |
 
-### UI Elements
+### Props
+| Filename | Format | Description | Recommended Scale |
+|----------|--------|-------------|------------------|
+| obstacle_rock.glb | glTF Binary | Rock obstacle | 1.0 |
+| obstacle_tree.glb | glTF Binary | Tree obstacle | 1.0 |
+
+### Effects
+| Filename | Format | Description | Recommended Scale |
+|----------|--------|-------------|------------------|
+| explosion.glb | glTF Binary | Explosion animation | 1.0 |
+| laser_beam.glb | glTF Binary | Ranger attack effect | 1.0 |
+| impact_hit.glb | glTF Binary | Attack impact effect | 0.8 |
+| dust_cloud.glb | glTF Binary | Movement dust effect | 0.8 |
+| construction_effect.glb | glTF Binary | Building construction | 1.5 |
+
+### UI Elements (2D)
 | Filename | Type | Description | Size |
 |----------|------|-------------|------|
 | button_normal.png | PNG | Standard button | 196×64 |
@@ -71,61 +83,41 @@ This directory contains all media assets for the RTS game, organized by type.
 | resource_icon_minerals.png | PNG | Minerals UI icon | 32×32 |
 | resource_icon_energy.png | PNG | Energy UI icon | 32×32 |
 
-### Effects
-| Filename | Type | Description | Size |
-|----------|------|-------------|------|
-| explosion.gif | GIF | Explosion animation | 256×256 |
-| laser_beam.png | PNG | Ranger attack effect | 64×512 |
-| impact_hit.png | PNG | Attack impact effect | 64×64 |
-| dust_cloud.png | PNG | Movement dust effect | 64×64 |
-| construction_effect.gif | GIF | Building construction | 192×192 |
+## Creating Models in Blender
 
-### Sounds
-| Filename | Type | Description | Duration |
-|----------|------|-------------|----------|
-| unit_select.wav | WAV | Unit selection sound | 0.5s |
-| unit_acknowledge.wav | WAV | Unit acknowledgment | 1.0s |
-| unit_move.wav | WAV | Unit movement sound | 0.8s |
-| unit_attack.wav | WAV | Unit attack sound | 0.7s |
-| building_place.wav | WAV | Building placement | 1.2s |
-| resource_gather.wav | WAV | Resource collection | 0.6s |
-| button_click.wav | WAV | UI button click | 0.3s |
-| game_start.wav | WAV | Game start sound | 2.5s |
-| victory.wav | WAV | Victory fanfare | 5.0s |
-| defeat.wav | WAV | Defeat sound | 3.5s |
+When creating models in Blender for the game:
 
-### Music
-| Filename | Type | Description | Duration |
-|----------|------|-------------|----------|
-| main_theme.ogg | OGG | Main menu theme | 3:25 |
-| gameplay_1.ogg | OGG | In-game music track 1 | 3:10 |
-| gameplay_2.ogg | OGG | In-game music track 2 | 2:55 |
-| gameplay_3.ogg | OGG | In-game music track 3 | 3:15 |
-| battle_intense.ogg | OGG | Combat music | 2:45 |
-| victory_theme.ogg | OGG | Victory sequence music | 1:30 |
+1. Use appropriate scale (1 Blender unit = 1 meter in game)
+2. Apply all transformations before export
+3. Export as glTF Binary (.glb) format
+4. Set the correct orientation (Y-up for Blender exports)
+5. Include materials and textures in the export
+6. For animated models, include armatures and animations
 
-### Fonts
-| Filename | Type | Description | Styles |
-|----------|------|-------------|--------|
-| main_font.ttf | TTF | Primary game font | Regular, Bold, Italic |
-| title_font.ttf | TTF | Font for titles and headers | Regular, Bold |
-| ui_font.ttf | TTF | Font for UI elements | Regular |
+## Export Settings for Blender
 
-## Asset Guidelines
+When exporting from Blender to glTF:
 
-1. Keep file sizes optimized - use compression when possible
-2. All textures should use power-of-two dimensions when possible
-3. All non-transparent backgrounds should use the same palette
-4. Sound effects should be normalized to avoid volume inconsistencies
-5. Unit sprites should face right in their default state
+- Format: glTF Binary (.glb)
+- Include: Selected Objects
+- Transform: Y Up
+- Geometry:
+  - Apply Modifiers: On
+  - UVs: On
+  - Normals: On
+  - Tangents: On
+  - Vertex Colors: On
+  - Materials: On
+  - Textures: On
+  - Animations: On (for animated assets)
 
 ## Implementation
 
-To add new assets:
-1. Place the file in the appropriate directory
-2. Update the resource manifest (see below)
-3. Implement loading code in the ResourceManager
-4. Use the asset in the game code
+To add new 3D assets:
+1. Create the model in Blender
+2. Export to .glb format
+3. Place the file in the appropriate models directory
+4. Update the asset manifest (see below)
 
 ## Resource Manifest
 

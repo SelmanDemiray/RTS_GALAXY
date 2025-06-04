@@ -14,17 +14,35 @@ pub fn draw_ui(
     audio_manager: &mut AudioManager,
 ) {
     // Draw top bar with resources
-    let bar_height = 50.0;
+    let bar_height = 80.0; // Increased height for zoom info
     draw_rectangle(0.0, 0.0, screen_width(), bar_height, Color::new(0.1, 0.1, 0.3, 0.8));
     
     if let Some(player) = game_state.players.get(game_state.current_player_id as usize) {
         // Draw minerals
         let minerals_text = format!("Minerals: {}", player.minerals);
-        draw_text(&minerals_text, 20.0, 30.0, 20.0, WHITE);
+        draw_text(&minerals_text, 20.0, 25.0, 20.0, WHITE);
         
         // Draw energy
         let energy_text = format!("Energy: {}", player.energy);
-        draw_text(&energy_text, 200.0, 30.0, 20.0, WHITE);
+        draw_text(&energy_text, 200.0, 25.0, 20.0, WHITE);
+    }
+    
+    // Draw zoom information
+    let zoom_label = game_state.zoom_system.get_zoom_label();
+    let zoom_desc = game_state.zoom_system.get_zoom_description();
+    draw_text(&zoom_label, 20.0, 50.0, 16.0, YELLOW);
+    draw_text(&zoom_desc, 20.0, 70.0, 14.0, LIGHTGRAY);
+    
+    // Draw zoom controls help
+    let zoom_help = "Zoom: +/- or Mouse Wheel | Home: H | Quick: 1-9";
+    draw_text(zoom_help, screen_width() - 400.0, 25.0, 14.0, LIGHTGRAY);
+    
+    // Draw home button
+    if draw_button(screen_width() - 120.0, 45.0, 100.0, 25.0, "Home (H)") {
+        audio_manager.play_ui_click(resource_manager, game_state);
+        let home_pos = game_state.zoom_system.go_home();
+        game_state.camera_x = home_pos.x;
+        game_state.camera_y = home_pos.y;
     }
     
     // Draw mini-map
@@ -73,10 +91,10 @@ pub fn draw_ui(
     let minutes = (game_state.game_time / 60.0) as i32;
     let seconds = (game_state.game_time % 60.0) as i32;
     let time_text = format!("Time: {:02}:{:02}", minutes, seconds);
-    draw_text(&time_text, screen_width() - 120.0, 30.0, 20.0, WHITE);
+    draw_text(&time_text, screen_width() - 120.0, bar_height - 15.0, 16.0, WHITE);
     
     // Draw back to menu button
-    if draw_button(10.0, 60.0, 120.0, 30.0, "Main Menu") {
+    if draw_button(10.0, bar_height + 10.0, 120.0, 30.0, "Main Menu") {
         audio_manager.play_ui_click(resource_manager, game_state);
         game_state.current_screen = GameScreen::MainMenu;
     }
@@ -92,16 +110,18 @@ pub fn draw_ui(
         },
         GameMode::Offline => "Offline"
     };
-    draw_text(status_text, screen_width() - 100.0, 60.0, 16.0, WHITE);
+    draw_text(status_text, screen_width() - 100.0, bar_height + 20.0, 16.0, WHITE);
     
-    // Draw basic game UI
-    draw_text("Game UI", 10.0, screen_height() - 30.0, 20.0, WHITE);
+    // Show enhanced controls with zoom information
+    let controls_text = "WASD: Camera | Mouse: Select | H: Home | +/-: Zoom | 1-9: Quick Zoom";
+    draw_text(controls_text, 10.0, screen_height() - 30.0, 14.0, LIGHTGRAY);
     
-    // Show controls
-    draw_text("Controls: WASD to move camera, Mouse to select units", 10.0, screen_height() - 60.0, 16.0, LIGHTGRAY);
+    // Draw zoom level indicator
+    let zoom_indicator = format!("Zoom Level: {}/50", game_state.zoom_system.current_level);
+    draw_text(&zoom_indicator, 10.0, screen_height() - 50.0, 16.0, WHITE);
     
     egui_macroquad::ui(|egui_ctx| {
-        // Command Panel
+        // Enhanced Command Panel with zoom-aware controls
         egui_macroquad::egui::Window::new("Commands").show(egui_ctx, |ui| {
             if !game_state.selected_units.is_empty() {
                 if ui.button("Build Barracks").clicked() {
@@ -117,6 +137,43 @@ pub fn draw_ui(
                     game_state.current_command = Some(Command::Gather { resource_id: 0 });
                 }
             }
+        });
+
+        // Zoom Control Panel
+        egui_macroquad::egui::Window::new("Zoom Controls").show(egui_ctx, |ui| {
+            ui.label(format!("Current Level: {}/50", game_state.zoom_system.current_level));
+            
+            ui.horizontal(|ui| {
+                if ui.button("Zoom In (+)").clicked() && game_state.zoom_system.current_level > 1 {
+                    game_state.zoom_system.zoom_in();
+                }
+                if ui.button("Zoom Out (-)").clicked() && game_state.zoom_system.current_level < 50 {
+                    game_state.zoom_system.zoom_out();
+                }
+                if ui.button("Home (H)").clicked() {
+                    let home_pos = game_state.zoom_system.go_home();
+                    game_state.camera_x = home_pos.x;
+                    game_state.camera_y = home_pos.y;
+                }
+            });
+            
+            ui.separator();
+            ui.label("Quick Zoom (1-9):");
+            ui.horizontal(|ui| {
+                if ui.small_button("1: Unit").clicked() { game_state.zoom_system.set_zoom_level(1); }
+                if ui.small_button("2: Village").clicked() { game_state.zoom_system.set_zoom_level(5); }
+                if ui.small_button("3: City").clicked() { game_state.zoom_system.set_zoom_level(10); }
+                if ui.small_button("4: Region").clicked() { game_state.zoom_system.set_zoom_level(15); }
+            });
+            ui.horizontal(|ui| {
+                if ui.small_button("5: Planet").clicked() { game_state.zoom_system.set_zoom_level(20); }
+                if ui.small_button("6: System").clicked() { game_state.zoom_system.set_zoom_level(25); }
+                if ui.small_button("7: Cluster").clicked() { game_state.zoom_system.set_zoom_level(30); }
+                if ui.small_button("8: Galaxy").clicked() { game_state.zoom_system.set_zoom_level(35); }
+            });
+            
+            ui.separator();
+            ui.label(game_state.zoom_system.get_zoom_description());
         });
 
         // Unit Training Panel

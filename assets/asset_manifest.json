@@ -1,36 +1,36 @@
 {
-  "textures": {
+  "models": {
     "units": [
-      {"name": "worker", "file": "textures/units/worker.png", "dimensions": [128, 128]},
-      {"name": "worker_selected", "file": "textures/units/worker_selected.png", "dimensions": [128, 128]},
-      {"name": "fighter", "file": "textures/units/fighter.png", "dimensions": [128, 128]},
-      {"name": "ranger", "file": "textures/units/ranger.png", "dimensions": [128, 128]},
-      {"name": "tank", "file": "textures/units/tank.png", "dimensions": [128, 128]},
-      {"name": "unit_shadow", "file": "textures/units/unit_shadow.png", "dimensions": [64, 64]}
+      {"name": "worker", "file": "models/units/worker.glb", "scale": 1.0},
+      {"name": "fighter", "file": "models/units/fighter.glb", "scale": 1.0},
+      {"name": "ranger", "file": "models/units/ranger.glb", "scale": 1.0},
+      {"name": "tank", "file": "models/units/tank.glb", "scale": 1.2}
     ],
     "buildings": [
-      {"name": "headquarters", "file": "textures/buildings/headquarters.png", "dimensions": [256, 256]},
-      {"name": "barracks", "file": "textures/buildings/barracks.png", "dimensions": [192, 192]},
-      {"name": "factory", "file": "textures/buildings/factory.png", "dimensions": [192, 192]},
-      {"name": "resource_depot", "file": "textures/buildings/resource_depot.png", "dimensions": [192, 192]},
-      {"name": "defense_turret", "file": "textures/buildings/defense_turret.png", "dimensions": [128, 128]},
-      {"name": "building_construction", "file": "textures/buildings/building_construction.png", "dimensions": [192, 192]}
+      {"name": "headquarters", "file": "models/buildings/headquarters.glb", "scale": 2.0},
+      {"name": "barracks", "file": "models/buildings/barracks.glb", "scale": 1.8},
+      {"name": "factory", "file": "models/buildings/factory.glb", "scale": 1.8},
+      {"name": "resource_depot", "file": "models/buildings/resource_depot.glb", "scale": 1.8},
+      {"name": "defense_turret", "file": "models/buildings/defense_turret.glb", "scale": 1.2}
     ],
     "resources": [
-      {"name": "minerals", "file": "textures/resources/minerals.png", "dimensions": [128, 128]},
-      {"name": "minerals_depleted", "file": "textures/resources/minerals_depleted.png", "dimensions": [128, 128]},
-      {"name": "energy", "file": "textures/resources/energy.png", "dimensions": [128, 128]},
-      {"name": "energy_depleted", "file": "textures/resources/energy_depleted.png", "dimensions": [128, 128]}
+      {"name": "minerals", "file": "models/resources/minerals.glb", "scale": 1.0},
+      {"name": "energy", "file": "models/resources/energy.glb", "scale": 1.0}
     ],
     "terrain": [
-      {"name": "grass_tile", "file": "textures/terrain/grass_tile.png", "dimensions": [128, 128]},
-      {"name": "dirt_tile", "file": "textures/terrain/dirt_tile.png", "dimensions": [128, 128]},
-      {"name": "sand_tile", "file": "textures/terrain/sand_tile.png", "dimensions": [128, 128]},
-      {"name": "rock_tile", "file": "textures/terrain/rock_tile.png", "dimensions": [128, 128]},
-      {"name": "water_tile", "file": "textures/terrain/water_tile.png", "dimensions": [128, 128]},
-      {"name": "obstacle_rock", "file": "textures/terrain/obstacle_rock.png", "dimensions": [128, 128]},
-      {"name": "obstacle_tree", "file": "textures/terrain/obstacle_tree.png", "dimensions": [128, 128]}
+      {"name": "grass_tile", "file": "models/terrain/grass_tile.glb", "scale": 1.0},
+      {"name": "dirt_tile", "file": "models/terrain/dirt_tile.glb", "scale": 1.0}
     ],
+    "props": [
+      {"name": "obstacle_rock", "file": "models/props/obstacle_rock.glb", "scale": 1.0},
+      {"name": "obstacle_tree", "file": "models/props/obstacle_tree.glb", "scale": 1.0}
+    ],
+    "effects": [
+      {"name": "explosion", "file": "models/effects/explosion.glb", "scale": 1.0},
+      {"name": "impact_hit", "file": "models/effects/impact_hit.glb", "scale": 0.8}
+    ]
+  },
+  "textures": {
     "ui": [
       {"name": "button_normal", "file": "textures/ui/button_normal.png", "dimensions": [196, 64]},
       {"name": "button_hover", "file": "textures/ui/button_hover.png", "dimensions": [196, 64]},
@@ -42,19 +42,11 @@
       {"name": "health_bar_fill", "file": "textures/ui/health_bar_fill.png", "dimensions": [60, 12]},
       {"name": "resource_icon_minerals", "file": "textures/ui/resource_icon_minerals.png", "dimensions": [32, 32]},
       {"name": "resource_icon_energy", "file": "textures/ui/resource_icon_energy.png", "dimensions": [32, 32]}
-    ],
-    "effects": [
-      {"name": "explosion", "file": "textures/effects/explosion.gif", "dimensions": [256, 256], "frames": 8},
-      {"name": "laser_beam", "file": "textures/effects/laser_beam.png", "dimensions": [64, 512]},
-      {"name": "impact_hit", "file": "textures/effects/impact_hit.png", "dimensions": [64, 64]},
-      {"name": "dust_cloud", "file": "textures/effects/dust_cloud.png", "dimensions": [64, 64]},
-      {"name": "construction_effect", "file": "textures/effects/construction_effect.gif", "dimensions": [192, 192], "frames": 6}
     ]
   },
   "sounds": {
     "units": [
       {"name": "unit_select", "file": "sounds/units/unit_select.wav"},
-      {"name": "unit_acknowledge", "file": "sounds/units/unit_acknowledge.wav"},
       {"name": "unit_move", "file": "sounds/units/unit_move.wav"},
       {"name": "unit_attack", "file": "sounds/units/unit_attack.wav"}
     ],
@@ -64,27 +56,19 @@
     ],
     "ui": [
       {"name": "button_click", "file": "sounds/ui/button_click.wav"},
-      {"name": "menu_open", "file": "sounds/ui/menu_open.wav"},
-      {"name": "menu_close", "file": "sounds/ui/menu_close.wav"}
+      {"name": "menu_open", "file": "sounds/ui/menu_open.wav"}
     ],
     "game": [
-      {"name": "game_start", "file": "sounds/game/game_start.wav"},
-      {"name": "victory", "file": "sounds/game/victory.wav"},
-      {"name": "defeat", "file": "sounds/game/defeat.wav"},
-      {"name": "resource_gather", "file": "sounds/game/resource_gather.wav"}
+      {"name": "resource_gather", "file": "sounds/game/resource_gather.wav"},
+      {"name": "victory", "file": "sounds/game/victory.wav"}
     ]
   },
   "music": [
     {"name": "main_theme", "file": "music/main_theme.ogg"},
-    {"name": "gameplay_1", "file": "music/gameplay_1.ogg"},
-    {"name": "gameplay_2", "file": "music/gameplay_2.ogg"},
-    {"name": "gameplay_3", "file": "music/gameplay_3.ogg"},
-    {"name": "battle_intense", "file": "music/battle_intense.ogg"},
-    {"name": "victory_theme", "file": "music/victory_theme.ogg"}
+    {"name": "gameplay", "file": "music/gameplay.ogg"},
+    {"name": "battle_theme", "file": "music/battle_theme.ogg"}
   ],
   "fonts": [
-    {"name": "main_font", "file": "fonts/main_font.ttf"},
-    {"name": "title_font", "file": "fonts/title_font.ttf"},
-    {"name": "ui_font", "file": "fonts/ui_font.ttf"}
+    {"name": "main_font", "file": "fonts/main_font.ttf"}
   ]
 }

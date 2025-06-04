@@ -14,10 +14,20 @@ use crate::ui::menu::system::MenuSystem;
 use crate::resources::ResourceManager;
 use crate::network::NetworkClient;
 use crate::audio::AudioManager;
-use std::panic::{self, AssertUnwindSafe}; // Add this import for AssertUnwindSafe
+use std::panic::{self, AssertUnwindSafe};
 
 #[macroquad::main("Fantasy RTS")]
 async fn main() {
+    // Initialize 3D camera
+    let mut camera = Camera3D {
+        position: vec3(0.0, 10.0, 10.0),
+        target: vec3(0.0, 0.0, 0.0),
+        up: vec3(0.0, 1.0, 0.0),
+        fovy: 45.0,
+        projection: Projection::Perspective,
+        ..Default::default()
+    };
+
     let mut game_state = GameState::new();
     let mut network_client = NetworkClient::new();
     let mut ai_controller = AIController::new();
@@ -68,9 +78,6 @@ async fn main() {
         next_frame().await;
     }
     
-    // Don't try to start background music if it doesn't exist
-    // audio_manager.play_music("main_theme", &resource_manager, &game_state);
-    
     loop {
         // Check if game should quit
         if game_state.should_quit {
@@ -101,7 +108,7 @@ async fn main() {
             match game_state.current_screen {
                 GameScreen::MainMenu | GameScreen::Settings | GameScreen::Credits => {
                     menu_system.update(&mut game_state, &resource_manager, &mut audio_manager);
-                    menu_system.draw(&game_state, &resource_manager); // Fixed: removed &mut
+                    menu_system.draw(&game_state, &resource_manager);
                 },
                 GameScreen::Quit => {
                     // This will be handled by the quit check at the start of the loop
@@ -117,6 +124,60 @@ async fn main() {
                     // Game update logic
                     let previous_selected = game_state.selected_units.clone();
                     game_state.update();
+                    
+                    // Update 3D camera based on game state and zoom system
+                    let zoom_scale = game_state.zoom_system.get_current_scale() as f32;
+                    let camera_height = 10.0 + (zoom_scale / 100.0).clamp(1.0, 1000.0);
+                    let camera_distance = (zoom_scale / 50.0).clamp(5.0, 500.0);
+                    
+                    camera.position = vec3(
+                        game_state.camera_x, 
+                        camera_height, 
+                        game_state.camera_y + camera_distance
+                    );
+                    camera.target = vec3(game_state.camera_x, 0.0, game_state.camera_y);
+                    
+                    // Begin 3D mode
+                    set_camera(&camera);
+                    
+                    // Draw 3D terrain and entities with LOD based on zoom level
+                    let grid_size = (zoom_scale / 10.0).clamp(1.0, 100.0) as i32;
+                    let grid_spacing = (zoom_scale / 100.0).clamp(0.1, 50.0);
+                    draw_grid(grid_size, grid_spacing, BLACK, GRAY);
+                    
+                    // LOD system: only draw detailed models at appropriate zoom levels
+                    if game_state.zoom_system.current_level <= 15 {
+                        // Draw 3D models for game entities at close zoom levels
+                        for unit in &game_state.units {
+                            if let Some(model) = resource_manager.get_model(&unit.unit_type.to_string().to_lowercase()) {
+                                let position = vec3(unit.x, 0.0, unit.y);
+                                let rotation = vec3(0.0, 0.0, 0.0);
+                                let scale = (1.0 / zoom_scale as f32 * 1000.0).clamp(0.1, 2.0);
+                                
+                                // Only draw if unit would be visible at this scale
+                                if scale > 0.01 {
+                                    model.draw(position, rotation, scale);
+                                }
+                                
+                                // Draw selection indicator if unit is selected
+                                if game_state.selected_units.contains(&unit.id) {
+                                    // Draw a circle or highlight for selected units
+                                    draw_circle_3d(position, scale * 2.0, None, GREEN);
+                                }
+                            }
+                        }
+                    } else {
+                        // At higher zoom levels, draw simplified representations
+                        for unit in &game_state.units {
+                            let position = vec3(unit.x, 0.0, unit.y);
+                            let size = (zoom_scale / 1000.0).clamp(1.0, 100.0);
+                            let color = if unit.player_id == game_state.current_player_id { BLUE } else { RED };
+                            draw_cube(position, vec3(size, size * 0.5, size), None, color);
+                        }
+                    }
+                    
+                    // End 3D mode and switch back to 2D for UI
+                    set_default_camera();
                     
                     // Play selection sound if selection changed
                     if previous_selected != game_state.selected_units && !game_state.selected_units.is_empty() {
@@ -135,20 +196,8 @@ async fn main() {
                         }
                     }
                     
-                    // Draw game elements
-                    game_state.draw(&resource_manager);
-                    
-                    // Draw UI
+                    // Draw 2D UI elements
                     ui::game_ui::draw_ui(&mut game_state, &mut network_client, &resource_manager, &mut audio_manager);
-                    
-                    // Show tutorial tip
-                    draw_text(
-                        "Press WASD or arrows to move, and gather resources to progress!",
-                        10.0,
-                        90.0,
-                        20.0,
-                        WHITE
-                    );
                 },
             }
         }));
