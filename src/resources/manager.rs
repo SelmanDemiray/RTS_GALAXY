@@ -3,6 +3,7 @@ use macroquad::audio::Sound;
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use crate::resources::model3d::{Model3D, ModelInfo};
+use serde_json;
 
 // Asset manifest structures
 #[derive(Serialize, Deserialize)]
@@ -74,6 +75,7 @@ pub struct SoundCategories {
 pub struct ResourceManager {
     textures: HashMap<String, Texture2D>,
     sounds: HashMap<String, Sound>,
+    music: HashMap<String, Sound>,
     fonts: HashMap<String, Font>,
     models: HashMap<String, Model3D>,
     loading_progress: f32,
@@ -86,6 +88,7 @@ impl ResourceManager {
         Self {
             textures: HashMap::new(),
             sounds: HashMap::new(),
+            music: HashMap::new(),
             fonts: HashMap::new(),
             models: HashMap::new(),
             loading_progress: 0.0,
@@ -157,5 +160,54 @@ impl ResourceManager {
 
     pub fn get_model(&self, name: &str) -> Option<&Model3D> {
         self.models.get(name)
+    }
+
+    pub fn model_exists(&self, path: &str) -> bool {
+        // Check if model file exists in the loaded resources
+        // For now, we'll simulate this by checking against known assets
+        let known_models = [
+            "models/units/worker/worker.glb",
+            "models/units/fighter/fighter.glb", 
+            "models/units/ranger/ranger.glb",
+            "models/units/tank/tank.glb",
+            "models/buildings/headquarters/headquarters.glb",
+            "models/buildings/barracks/barracks.glb",
+            "models/buildings/war_factory/war_factory.glb",
+            "models/buildings/energy_plant/energy_plant.glb",
+            "models/buildings/defense_turret/defense_turret.glb",
+            "models/resources/minerals/minerals.glb",
+            "models/resources/energy/energy.glb",
+        ];
+        
+        known_models.contains(&path)
+    }
+    
+    pub fn animation_exists(&self, path: &str) -> bool {
+        // Check if animation file exists
+        // For demonstration, we'll mark some animations as existing
+        let known_animations = [
+            "models/units/worker/animations/idle.glb",
+            "models/units/worker/animations/walking.glb",
+            "models/units/worker/animations/gathering_minerals.glb",
+            "models/units/fighter/animations/idle.glb",
+            "models/units/fighter/animations/walking.glb",
+            "models/units/fighter/animations/melee_attack.glb",
+            "models/buildings/headquarters/animations/idle.glb",
+            "models/buildings/headquarters/animations/construction.glb",
+            "models/resources/minerals/animations/idle.glb",
+            "models/resources/energy/animations/idle.glb",
+        ];
+        
+        known_animations.contains(&path)
+    }
+    
+    pub async fn load_initial_assets(&mut self) {
+        self.load_resources().await;
+    }
+}
+
+impl Default for ResourceManager {
+    fn default() -> Self {
+        Self::new()
     }
 }

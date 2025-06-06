@@ -10,6 +10,24 @@ pub enum UnitType {
     Headquarters,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum ResourceType {
+    Minerals,
+    Energy,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum UnitAnimationState {
+    Idle,
+    Walking,
+    Running,
+    Attacking,
+    Gathering,
+    Building,
+    Dying,
+    Special,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum BuildingType {
     Headquarters,

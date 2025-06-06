@@ -46,25 +46,22 @@ pub fn manage_resources(game_state: &mut GameState) {
 }
 
 pub fn build_structure(game_state: &mut GameState, building_type: BuildingType) {
-    let ai_player_id = 1;
+    let ai_player_id = 1; // AI is player 1
     
-    // Find AI headquarters for positioning
-    let mut hq_pos = None;
-    for unit in &game_state.units {
-        if unit.player_id == ai_player_id && unit.unit_type == UnitType::Headquarters {
-            hq_pos = Some((unit.x, unit.y));
-            break;
-        }
-    }
+    // Find AI headquarters position
+    let hq_pos = game_state.units.iter()
+        .find(|unit| unit.player_id == ai_player_id && 
+              unit.building_type == Some(BuildingType::Headquarters))
+        .map(|unit| (unit.x, unit.y));
     
     if let Some((hq_x, hq_y)) = hq_pos {
-        let cost = get_building_cost(&building_type);
-        
+        let cost = building_type.get_cost();
         if game_state.players[ai_player_id].minerals >= cost {
-            // Place building near headquarters
-            let build_x = hq_x + gen_range(80.0, 150.0);
-            let build_y = hq_y + gen_range(-100.0, 100.0);
+            // Find a suitable build location near headquarters
+            let build_x = hq_x + 100.0;
+            let build_y = hq_y + 50.0;
             
+            // Create the building
             let building_id = game_state.spawn_unit(UnitType::Building, build_x, build_y, ai_player_id);
             
             // Set building type

@@ -484,3 +484,95 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Ready to command the galaxy? Download RTS Galaxy today!**
 
 *From commanding individual soldiers to orchestrating galactic empires, every scale of strategy awaits.*
+
+# RTS Galaxy
+
+A real-time strategy game with cosmic scale zoom levels, from individual units to galactic structures.
+
+## Features
+
+- Revolutionary zoom system spanning 50 levels from meters to light-years
+- Advanced 3D graphics with level-of-detail optimization
+- Modular animation system with individual asset files
+- Multiplayer support with spatial partitioning
+- AI opponents with strategic behaviors
+
+## Building the Game
+
+### Standard Build
+```bash
+cargo run
+```
+
+### Admin Build (Development Tool)
+```bash
+cargo run --features admin
+```
+
+## Admin Panel
+
+When compiled with the `admin` feature, the game includes a powerful asset inspection tool:
+
+### Accessing the Admin Panel
+- Press **F1** during gameplay to toggle the admin panel
+- The panel provides comprehensive asset validation and preview capabilities
+
+### Features
+- **Asset Validation**: Automatically scans all expected assets and reports missing files
+- **Animation Inspection**: Lists all required animations for each unit and building type
+- **Asset Filtering**: Filter by name or show only missing assets
+- **3D Preview**: Visual preview of models with zoom and rotation controls
+- **Real-time Updates**: Live monitoring of asset status during development
+
+### Asset Categories Monitored
+- **Units**: Worker, Fighter, Ranger, Tank models and animations
+- **Buildings**: Headquarters, Barracks, Factory, Defense structures
+- **Resources**: Mineral and energy nodes with ambient animations
+- **Effects**: Explosion and particle effect assets
+
+### Expected Animations
+The admin panel validates the presence of all required animations:
+
+#### Unit Animations
+- **Worker**: idle, walking, gathering_minerals, gathering_energy, building, carrying_resources, dying
+- **Fighter**: idle, walking, running, melee_attack, blocking, victory_pose, dying
+- **Ranger**: idle, walking, running, aiming, shooting, reloading, dying
+- **Tank**: idle, walking, turret_rotate, firing_cannon, damaged_idle, dying
+
+#### Building Animations
+- **All Buildings**: idle, construction, damaged, destroyed
+- **Headquarters**: command_active, communication, shield_up
+- **Barracks**: training, deployment
+- **Factory**: manufacturing, assembly_line, vehicle_rollout
+- **Defense Turret**: scanning, targeting, firing, turret_rotate
+- **Energy Plant**: power_generation, energy_surge, cooling_cycle
+
+## Development Workflow
+
+1. **Asset Creation**: Create 3D models and animations using Blender
+2. **Integration**: Place assets in the organized directory structure
+3. **Validation**: Use admin panel to verify all assets are properly loaded
+4. **Testing**: Preview assets in-game with zoom and rotation controls
+5. **Optimization**: Check performance impact across different zoom levels
+
+## File Structure
+
+```
+assets/
+├── models/
+│   ├── units/[unit_name]/
+│   │   ├── [unit_name].glb
+│   │   └── animations/
+│   │       ├── idle.glb
+│   │       ├── walking.glb
+│   │       └── ...
+│   └── buildings/[building_name]/
+│       ├── [building_name].glb
+│       └── animations/
+│           ├── idle.glb
+│           ├── construction.glb
+│           └── ...
+└── asset_manifest.json
+```
+
+The admin panel automatically validates this structure and reports any discrepancies.

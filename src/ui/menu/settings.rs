@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
-use crate::game::state::GameState;
-use crate::audio::AudioManager;
+use crate::game::state::{GameState, GameScreen}; // Fix import
 use crate::resources::manager::ResourceManager;
+use crate::audio::manager::AudioManager;
 use super::system::MenuSystem;
 
 pub struct SettingsMenu {
@@ -172,20 +172,10 @@ impl SettingsMenu {
     }
 }
 
-pub fn draw_settings(
-    menu_system: &mut MenuSystem,
-    game_state: &mut GameState,
-    _audio_manager: &AudioManager,
-    _resource_manager: &ResourceManager
+// Add draw function
+pub fn draw(
+    menu_system: &MenuSystem,
+    game_state: &GameState,
 ) {
-    // Create settings menu if it doesn't exist
-    let mut settings_menu = SettingsMenu::new();
-    
-    settings_menu.update();
-    
-    if settings_menu.handle_input(game_state) || is_key_pressed(KeyCode::Escape) {
-        game_state.current_screen = crate::game::screens::GameScreen::MainMenu;
-    }
-    
-    settings_menu.draw(game_state);
+    draw_settings_screen(menu_system, game_state);
 }

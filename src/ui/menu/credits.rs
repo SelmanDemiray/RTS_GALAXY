@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
-use crate::game::{GameState, GameScreen};
-use crate::audio::AudioManager;
-use crate::resources::ResourceManager;
+use crate::game::state::{GameState, GameScreen}; // Fix import
+use crate::resources::manager::ResourceManager;
+use crate::audio::manager::AudioManager;
 use super::system::MenuSystem;
 
 pub struct CreditsScreen {
@@ -254,10 +254,10 @@ impl CreditsScreen {
 }
 
 pub fn draw_credits(
-    _menu_system: &mut MenuSystem,
+    menu_system: &mut MenuSystem,
     game_state: &mut GameState,
-    _audio_manager: &AudioManager,
-    _resource_manager: &ResourceManager
+    audio_manager: &AudioManager,
+    resource_manager: &ResourceManager
 ) {
     let mut credits_screen = CreditsScreen::new();
     let dt = get_frame_time();
@@ -265,4 +265,8 @@ pub fn draw_credits(
     credits_screen.update(dt);
     credits_screen.handle_input(game_state);
     credits_screen.draw();
+}
+
+pub fn draw(menu_system: &MenuSystem, game_state: &GameState) {
+    draw_credits_screen(menu_system, game_state);
 }

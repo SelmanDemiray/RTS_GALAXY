@@ -9,9 +9,11 @@ pub enum BuildingType {
     
     // Military Production
     Barracks,
+    TrainingCenter,
     WarFactory,
     Starport,
     NavalYard,
+    Factory,
     
     // Research & Technology
     ResearchLab,
@@ -23,13 +25,14 @@ pub enum BuildingType {
     ResourceDepot,
     MineralProcessor,
     EnergyPlant,
+    PowerStation,
     RefineryComplex,
     StorageSilo,
     
     // Defense Structures
     DefenseTurret,
-    MissileTurret,
-    ShieldGenerator,
+    MissileLauncher,
+    Shield,
     Bunker,
     WallSegment,
     Gate,
@@ -102,6 +105,11 @@ impl BuildingType {
                 build_time: 60.0, mineral_cost: 300, energy_cost: 100,
                 population_provided: 0, research_points: 2,
             },
+            BuildingType::TrainingCenter => BuildingStats {
+                max_health: 1400.0, armor: 10.0, power_requirement: 30,
+                build_time: 75.0, mineral_cost: 350, energy_cost: 150,
+                population_provided: 0, research_points: 3,
+            },
             BuildingType::WarFactory => BuildingStats {
                 max_health: 1400.0, armor: 12.0, power_requirement: 40,
                 build_time: 90.0, mineral_cost: 600, energy_cost: 200,
@@ -124,6 +132,11 @@ impl BuildingType {
                 build_time: 50.0, mineral_cost: 250, energy_cost: 0,
                 population_provided: 0, research_points: 2,
             },
+            BuildingType::PowerStation => BuildingStats {
+                max_health: 900.0, armor: 4.0, power_requirement: -80,
+                build_time: 55.0, mineral_cost: 300, energy_cost: 0,
+                population_provided: 0, research_points: 2,
+            },
             
             // Defense Structures
             BuildingType::DefenseTurret => BuildingStats {
@@ -131,7 +144,12 @@ impl BuildingType {
                 build_time: 30.0, mineral_cost: 150, energy_cost: 75,
                 population_provided: 0, research_points: 1,
             },
-            BuildingType::ShieldGenerator => BuildingStats {
+            BuildingType::MissileLauncher => BuildingStats {
+                max_health: 700.0, armor: 7.0, power_requirement: 25,
+                build_time: 40.0, mineral_cost: 250, energy_cost: 100,
+                population_provided: 0, research_points: 3,
+            },
+            BuildingType::Shield => BuildingStats {
                 max_health: 500.0, armor: 5.0, power_requirement: 80,
                 build_time: 75.0, mineral_cost: 400, energy_cost: 300,
                 population_provided: 0, research_points: 5,
@@ -173,6 +191,13 @@ impl BuildingType {
                     "drill_mode".to_string(),
                 ]);
             },
+            BuildingType::TrainingCenter => {
+                base_animations.extend(vec![
+                    "advanced_training".to_string(),
+                    "tactics_discussion".to_string(),
+                    "unit_parade".to_string(),
+                ]);
+            },
             BuildingType::WarFactory => {
                 base_animations.extend(vec![
                     "manufacturing".to_string(),
@@ -209,7 +234,7 @@ impl BuildingType {
             },
             
             // Defense buildings
-            BuildingType::DefenseTurret | BuildingType::MissileTurret => {
+            BuildingType::DefenseTurret | BuildingType::MissileLauncher => {
                 base_animations.extend(vec![
                     "scanning".to_string(),
                     "targeting".to_string(),
@@ -218,7 +243,7 @@ impl BuildingType {
                     "turret_rotate".to_string(),
                 ]);
             },
-            BuildingType::ShieldGenerator => {
+            BuildingType::Shield => {
                 base_animations.extend(vec![
                     "shield_charging".to_string(),
                     "shield_active".to_string(),
@@ -246,5 +271,49 @@ impl BuildingType {
         }
         
         base_animations
+    }
+    
+    pub fn get_cost(&self) -> u32 {
+        match self {
+            BuildingType::Headquarters => 0,
+            BuildingType::CommandCenter => 400,
+            BuildingType::ControlTower => 200,
+            BuildingType::Barracks => 150,
+            BuildingType::TrainingCenter => 175,
+            BuildingType::Starport => 300,
+            BuildingType::NavalYard => 250,
+            BuildingType::Factory => 200,
+            BuildingType::WarFactory => 300,
+            BuildingType::ResearchLab => 200,
+            BuildingType::TechCenter => 350,
+            BuildingType::ResourceDepot => 175,
+            BuildingType::EnergyPlant => 150,
+            BuildingType::PowerStation => 200,
+            BuildingType::DefenseTurret => 75,
+            // ...existing code...
+            _ => 100,
+        }
+    }
+
+    pub fn get_health(&self) -> f32 {
+        match self {
+            BuildingType::Headquarters => 2000.0,
+            BuildingType::CommandCenter => 1800.0,
+            BuildingType::ControlTower => 800.0,
+            BuildingType::Barracks => 1000.0,
+            BuildingType::TrainingCenter => 1200.0,
+            BuildingType::Starport => 1500.0,
+            BuildingType::NavalYard => 1300.0,
+            BuildingType::Factory => 1200.0,
+            BuildingType::WarFactory => 1600.0,
+            BuildingType::ResearchLab => 800.0,
+            BuildingType::TechCenter => 1000.0,
+            BuildingType::ResourceDepot => 900.0,
+            BuildingType::EnergyPlant => 600.0,
+            BuildingType::PowerStation => 800.0,
+            BuildingType::DefenseTurret => 400.0,
+            // ...existing code...
+            _ => 500.0,
+        }
     }
 }

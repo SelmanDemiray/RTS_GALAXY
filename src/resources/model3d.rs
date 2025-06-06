@@ -1,4 +1,5 @@
 use macroquad::prelude::*;
+use macroquad::color::LIGHTBLUE; // Add LIGHTBLUE import
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

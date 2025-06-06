@@ -10,6 +10,16 @@ pub struct AIController {
     last_unit_built: Option<UnitType>,
     has_barracks: bool,
     has_factory: bool,
+    pub active: bool,
+    pub difficulty: AIDifficulty,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AIDifficulty {
+    Easy,
+    Medium,
+    Hard,
+    Expert,
 }
 
 impl AIController {
@@ -22,42 +32,46 @@ impl AIController {
             last_unit_built: None,
             has_barracks: false,
             has_factory: false,
+            active: false,
+            difficulty: AIDifficulty::Medium,
         }
     }
     
     pub fn update(&mut self, game_state: &mut GameState) {
-        // Update AI timers
-        let dt = 0.016; // Assuming ~60 FPS
-        self.think_timer += dt;
-        self.resource_timer += dt;
-        self.attack_timer += dt;
-        self.build_timer += dt;
-        
-        // Process resource gathering (more frequently)
-        if self.resource_timer >= 0.5 {
-            self.resource_timer = 0.0;
-            behaviors::manage_resources(game_state);
-        }
-        
-        // Process general AI decision making
-        if self.think_timer >= 1.0 {
-            self.think_timer = 0.0;
-            behaviors::make_decisions(game_state);
-        }
-        
-        // Decide on attacking
-        if self.attack_timer >= 30.0 {
-            self.attack_timer = 0.0;
-            behaviors::plan_attack(game_state);
-        }
-        
-        // Check buildings
-        self.check_buildings(game_state);
-        
-        // Handle building and training
-        if self.build_timer >= 15.0 {
-            self.build_timer = 0.0;
-            self.build_or_train(game_state);
+        if self.active {
+            // Update AI timers
+            let dt = 0.016; // Assuming ~60 FPS
+            self.think_timer += dt;
+            self.resource_timer += dt;
+            self.attack_timer += dt;
+            self.build_timer += dt;
+            
+            // Process resource gathering (more frequently)
+            if self.resource_timer >= 0.5 {
+                self.resource_timer = 0.0;
+                behaviors::manage_resources(game_state);
+            }
+            
+            // Process general AI decision making
+            if self.think_timer >= 1.0 {
+                self.think_timer = 0.0;
+                behaviors::make_decisions(game_state);
+            }
+            
+            // Decide on attacking
+            if self.attack_timer >= 30.0 {
+                self.attack_timer = 0.0;
+                behaviors::plan_attack(game_state);
+            }
+            
+            // Check buildings
+            self.check_buildings(game_state);
+            
+            // Handle building and training
+            if self.build_timer >= 15.0 {
+                self.build_timer = 0.0;
+                self.build_or_train(game_state);
+            }
         }
     }
     
@@ -162,5 +176,11 @@ impl AIController {
                 }
             }
         }
+    }
+}
+
+impl Default for AIController {
+    fn default() -> Self {
+        Self::new()
     }
 }

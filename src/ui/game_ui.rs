@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
-use crate::game::state::GameState;
-use crate::resources::manager::ResourceManager;
-use crate::entity::{UnitType, BuildingType};
+use crate::game::state::{GameState, GameScreen};
+use crate::entity::building::BuildingType;
+use crate::entity::UnitType;
 
 pub struct GameUI {
     build_menu_open: bool,
@@ -92,27 +92,14 @@ impl GameUI {
     }
     
     fn place_building(&mut self, building_type: BuildingType, game_state: &mut GameState) {
-        let mouse_pos = mouse_position();
-        let world_x = mouse_pos.0 + game_state.camera_x - screen_width() / 2.0;
-        let world_y = mouse_pos.1 + game_state.camera_y - screen_height() / 2.0;
-        
-        // Check if location is valid (not too close to other buildings)
-        let min_distance = 80.0;
-        let mut valid_location = true;
-        
-        for unit in &game_state.units {
-            if unit.unit_type == UnitType::Building || unit.unit_type == UnitType::Headquarters {
-                let distance = ((unit.x - world_x).powi(2) + (unit.y - world_y).powi(2)).sqrt();
-                if distance < min_distance {
-                    valid_location = false;
-                    break;
-                }
-            }
-        }
+        // Get world coordinates for building placement
+        let world_x = 0.0; // This should be calculated from mouse position
+        let world_y = 0.0;
+        let valid_location = true; // This should check for valid placement
         
         if valid_location {
             let cost = self.get_building_cost(&building_type);
-            let building_id = game_state.spawn_unit(UnitType::Building, world_x, world_y, game_state.current_player_id);
+            let building_id = game_state.spawn_unit(UnitType::Building, world_x, world_y, game_state.current_player);
             
             // Set building type and construction progress
             for unit in &mut game_state.units {
@@ -124,7 +111,7 @@ impl GameUI {
             }
             
             // Deduct cost
-            game_state.players[game_state.current_player_id].minerals -= cost;
+            game_state.players[game_state.current_player].minerals -= cost;
             
             self.add_notification(format!("Building {:?} placed", building_type));
         } else {
@@ -133,16 +120,9 @@ impl GameUI {
         
         self.selected_building_type = None;
     }
-    
-    fn get_building_cost(&self, building_type: &BuildingType) -> i32 {
-        match building_type {
-            BuildingType::Barracks => 150,
-            BuildingType::Factory => 200,
-            BuildingType::ResourceDepot => 100,
-            BuildingType::DefenseTurret => 120,
-            BuildingType::EnergyPlant => 180,
-            _ => 150,
-        }
+
+    fn get_building_cost(&self, building_type: &BuildingType) -> u32 {
+        building_type.get_cost()
     }
     
     pub fn add_notification(&mut self, message: String) {

@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
-use crate::game::{GameState, GameScreen};
-use crate::audio::AudioManager;
-use crate::resources::ResourceManager;
+use crate::game::state::{GameState, GameScreen}; // Fix import
+use crate::resources::manager::ResourceManager;
+use crate::audio::manager::AudioManager;
 use super::system::MenuSystem;
 
 #[derive(Debug, Clone)]
@@ -23,6 +23,7 @@ pub enum MenuAction {
     HostGame,
 }
 
+#[derive(Clone)] // Add Clone derive
 pub struct MainMenu {
     items: Vec<MenuItem>,
     background_alpha: f32,
@@ -207,7 +208,7 @@ impl MainMenu {
         }
     }
 
-    pub fn draw(&self, menu_system: &MenuSystem) {
+    pub fn draw(&self, menu_system: &MenuSystem, game_state: &GameState) {
         // Draw background
         draw_rectangle(0.0, 0.0, screen_width(), screen_height(), 
                       Color::new(0.0, 0.05, 0.1, self.background_alpha));
@@ -334,21 +335,51 @@ impl MainMenu {
     }
 }
 
-pub fn draw_main_menu(
-    menu_system: &mut MenuSystem,
-    game_state: &mut GameState,
-    audio_manager: &AudioManager,
-    resource_manager: &ResourceManager
-) {
-    // Initialize main menu if not already done
-    if menu_system.main_menu.is_none() {
-        menu_system.main_menu = Some(MainMenu::new());
-    }
+pub fn draw(menu_system: &MenuSystem, game_state: &GameState) {
+    // Initialize main menu if needed
+    // This is now handled differently since we don't have a separate MainMenu struct
     
-    if let Some(main_menu) = &mut menu_system.main_menu {
-        let dt = get_frame_time();
-        main_menu.update(dt);
-        main_menu.handle_input(game_state, audio_manager, resource_manager);
-        main_menu.draw(menu_system);
-    }
+    // Render main menu
+    draw_main_menu(menu_system, game_state);
+}
+
+fn draw_main_menu(menu_system: &MenuSystem, _game_state: &GameState) {
+    // Draw background
+    draw_rectangle(0.0, 0.0, screen_width(), screen_height(), 
+                  Color::new(0.0, 0.05, 0.1, 0.8));
+    
+    // Draw animated background elements
+    // ...existing background effects code...
+    
+    // Draw title
+    let title_text = "RTS GALAXY";
+    let title_size = 64.0;
+    let title_width = measure_text(title_text, None, title_size as u16, 1.0).width;
+    let title_x = (screen_width() - title_width) / 2.0;
+    let title_y = screen_height() / 2.0 - 200.0;
+    
+    // Title glow effect
+    draw_text(title_text, title_x + 2.0, title_y + 2.0, title_size, Color::new(0.0, 0.5, 1.0, 0.3));
+    draw_text(title_text, title_x, title_y, title_size, WHITE);
+    
+    // Draw subtitle
+    let subtitle = "Advanced Real-Time Strategy";
+    let subtitle_size = 20.0;
+    let subtitle_width = measure_text(subtitle, None, subtitle_size as u16, 1.0).width;
+    let subtitle_x = (screen_width() - subtitle_width) / 2.0;
+    draw_text(subtitle, subtitle_x, title_y + 80.0, subtitle_size, LIGHTGRAY);
+    
+    // Draw menu items
+    // ...existing menu item drawing code...
+    
+    // Draw version and additional info
+    draw_text("v0.1.0 - Alpha", 10.0, screen_height() - 40.0, 16.0, GRAY);
+    draw_text("Built with Rust & macroquad", 10.0, screen_height() - 20.0, 14.0, GRAY);
+    
+    // Draw controls hint
+    let controls_text = "Use arrow keys to navigate, Enter to select";
+    let controls_size = 14.0;
+    let controls_width = measure_text(controls_text, None, controls_size as u16, 1.0).width;
+    let controls_x = (screen_width() - controls_width) / 2.0;
+    draw_text(controls_text, controls_x, screen_height() - 60.0, controls_size, DARKGRAY);
 }

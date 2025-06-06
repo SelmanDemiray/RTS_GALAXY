@@ -1,8 +1,10 @@
 use macroquad::audio::{play_sound, PlaySoundParams};
 use crate::resources::manager::ResourceManager;
 use crate::game::state::GameState;
+use std::collections::HashMap;
 
 pub struct AudioManager {
+    sounds: HashMap<String, String>, // Placeholder for audio data
     current_music: Option<String>,
     music_volume: f32,
     sound_volume: f32,
@@ -11,6 +13,7 @@ pub struct AudioManager {
 impl AudioManager {
     pub fn new() -> Self {
         Self {
+            sounds: HashMap::new(),
             current_music: None,
             music_volume: 0.7,
             sound_volume: 0.8,
@@ -91,5 +94,11 @@ impl AudioManager {
     
     pub fn get_current_music(&self) -> Option<&str> {
         self.current_music.as_deref()
+    }
+}
+
+impl Default for AudioManager {
+    fn default() -> Self {
+        Self::new()
     }
 }
